@@ -96,8 +96,9 @@ Material:
     - _HorizonThreshold: 0.02
     - _Metallic: 0
     - _Mode: 0
-    - _MoonSize: 0.04
-    - _MoonSizeConvergence: 5
+    - _MoonRatio: 0
+    - _MoonSize: 0.2
+    - _MoonSizeConvergence: 9
     - _OcclusionStrength: 1
     - _OffsetHorizon: -0.01
     - _Parallax: 0.02
@@ -106,7 +107,7 @@ Material:
     - _SrcBlend: 1
     - _SunDisk: 2
     - _SunSize: 0.06
-    - _SunSizeConvergence: 5
+    - _SunSizeConvergence: 3.31
     - _UVSec: 0
     - _ZWrite: 1
     - _kMoonBrightness: 0.548
@@ -116,6 +117,6 @@ Material:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _GroundColor: {r: 0.5566038, g: 0.5513528, b: 0.54960245, a: 1}
-    - _MoonColor: {r: 0.8396226, g: 0.8208085, b: 0.7736145, a: 128}
-    - _SkyTint: {r: 0.8301887, g: 0.8301887, b: 0.8301887, a: 1}
+    - _MoonColor: {r: 1, g: 0.98337823, b: 0.8836478, a: 128}
+    - _SkyTint: {r: 0.8301887, g: 0.8301887, b: 0.85490197, a: 1}
   m_BuildTextureStacks: []

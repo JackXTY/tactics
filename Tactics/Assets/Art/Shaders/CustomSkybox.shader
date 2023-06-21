@@ -12,6 +12,7 @@ Shader "Custom/Skybox"
         _MoonSize("Moon Size", Range(0, 1)) = 0.04
         _MoonSizeConvergence("Moon Size Convergence", Range(1, 10)) = 5
         _MoonColor("Moon Color", Color) = (200, 200, 200, 128)
+        _MoonRatio("Moon Ratio", Range(-2, 2)) = 0
         _AtmosphereThickness("Atmosphere Thickness", Range(0, 5)) = 1
         _Exposure("Exposure", Range(0, 8)) = 1.3
         _kSunBrightness("Sun Brightness", Range(0, 50)) = 20
@@ -61,6 +62,7 @@ Shader "Custom/Skybox"
             float _Exposure;
             float _kSunBrightness;
             float _kMoonBrightness;
+            float _MoonRatio;
 
             #define PositivePow(base, power) pow(abs(base), power)
 
@@ -317,9 +319,53 @@ Shader "Custom/Skybox"
                     float3 sunColor = kHDSundiskIntensityFactor * saturate(cOut) * _SunColor.xyz / lightColorIntensity;
                     col += sunColor * calcSunAttenuation(_SunDirection.xyz, eyeRay);
 
+                    // Calculate the moon disk, according to how sun disk is calculated
                     // float3 moonColor = kHDSundiskIntensityFactor * saturate(cOut) * _SunColor.xyz / lightColorIntensity;
-                    float3 moonColor = kHDSundiskIntensityFactor * 0.1f * _MoonColor.xyz / lightColorIntensity;
-                    col += moonColor * saturate(calcMoonAttenuation(-_SunDirection.xyz, eyeRay));
+                    /*float3 moonColor = kHDSundiskIntensityFactor * 0.1f * _MoonColor.xyz / lightColorIntensity;
+                    moonColor *= saturate(calcMoonAttenuation(-_SunDirection.xyz, eyeRay));
+                    moonColor = lerp(float3(0, 0, 0), moonColor, pow(saturate(abs(_SunDirection.y) * 15), 2));*/
+                    
+                    // Calculate the shape change of moon, and don't let it affect sun
+                    if (_SunDirection.y < 0 && dot(eyeRay, -_SunDirection.xyz) > 0) { // the dot test if it's for sun or moon
+                        float3 xAxis;
+                        if (dot(-_SunDirection.xyz, float3(0, 1, 0)) > 0.001)
+                        {
+                            xAxis = cross(float3(1, 0, 0), -_SunDirection.xyz);
+                        }
+                        else {
+                            xAxis = cross(float3(0, 1, 0), -_SunDirection.xyz);
+                        }
+                        float3 yAxis = cross(-_SunDirection.xyz, xAxis);
+                        float2 moonAxis = float2(dot(xAxis, eyeRay), dot(yAxis, eyeRay)) / sqrt(_MoonSize);
+                        float moonRadius2 = dot(moonAxis, moonAxis);
+                        float moonShineRadius2 = _MoonSize * _MoonSize;
+                        float moonMaxRadius2 = moonShineRadius2 * 1.2f; // Manually Decide!! If need change, should change with TEST!!
+                        if (moonRadius2 < moonMaxRadius2) {
+
+                            // _MoonRatio : [-2, 2], from first quarter to last quater, 0 is full moon
+                            float occlusion = 1; // how the moon is occluded, to change its shape, we use SDF to calculate
+                            
+                            float circleHorizontalLen = sqrt(max(moonShineRadius2 * 1.5f - moonAxis.x * moonAxis.x, 0));
+                            
+                            float r = sign(_MoonRatio) - _MoonRatio;
+                            float occlusionSDF = sign(_MoonRatio) * moonAxis.y - sign(_MoonRatio) * r * circleHorizontalLen;
+       
+                            float maxSDF = 0.1f;
+                            occlusion = 1 - saturate(occlusionSDF / maxSDF);
+                            occlusion = pow(occlusion, 3);
+                            
+                            
+                            // col += float3(occlusion, occlusion, occlusion);
+
+                            float moonAttenuate = (moonMaxRadius2 - moonRadius2) / (moonMaxRadius2 - moonShineRadius2)  * occlusion;
+                            col += lerp(float3(0, 0, 0), _MoonColor, saturate(moonAttenuate));
+                            
+                            
+                        }
+                        
+                    }
+
+                    // col += moonColor;
                 }
                 else if (y < 1) // horizon, y in [0, 1)
                 {
