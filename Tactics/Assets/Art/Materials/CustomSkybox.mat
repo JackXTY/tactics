@@ -96,7 +96,7 @@ Material:
     - _HorizonThreshold: 0.02
     - _Metallic: 0
     - _Mode: 0
-    - _MoonRatio: 0
+    - _MoonRatio: 0.95
     - _MoonSize: 0.2
     - _MoonSizeConvergence: 9
     - _OcclusionStrength: 1

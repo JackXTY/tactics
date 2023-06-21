@@ -326,7 +326,8 @@ Shader "Custom/Skybox"
                     moonColor = lerp(float3(0, 0, 0), moonColor, pow(saturate(abs(_SunDirection.y) * 15), 2));*/
                     
                     // Calculate the shape change of moon, and don't let it affect sun
-                    if (_SunDirection.y < 0 && dot(eyeRay, -_SunDirection.xyz) > 0) { // the dot test if it's for sun or moon
+                    float moonAngleCos = dot(eyeRay, -_SunDirection.xyz);
+                    if (_SunDirection.y < 0 && moonAngleCos > 0) { // the dot test if it's for sun or moon
                         float3 xAxis;
                         if (dot(-_SunDirection.xyz, float3(0, 1, 0)) > 0.001)
                         {
@@ -357,7 +358,8 @@ Shader "Custom/Skybox"
                             
                             // col += float3(occlusion, occlusion, occlusion);
 
-                            float moonAttenuate = (moonMaxRadius2 - moonRadius2) / (moonMaxRadius2 - moonShineRadius2)  * occlusion;
+                            float moonAttenuate = (moonMaxRadius2 - moonRadius2) / (moonMaxRadius2 - moonShineRadius2) 
+                                * occlusion * saturate(_SunDirection.y * _SunDirection.y * 10);
                             col += lerp(float3(0, 0, 0), _MoonColor, saturate(moonAttenuate));
                             
                             
