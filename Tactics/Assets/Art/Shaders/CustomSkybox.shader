@@ -17,12 +17,15 @@ Shader "Custom/Skybox"
         _Exposure("Exposure", Range(0, 8)) = 1.3
         _kSunBrightness("Sun Brightness", Range(0, 50)) = 20
         _kMoonBrightness("Moon Brightness", Range(0, 5)) = 1
+        _StarNoiseTex("Star Noise Texture", 2D) = "black" {}
+        _StarIntensity("Star Intensity", Range(0, 1)) = 0.4
+        _CloudTexture("Cloud Texture", 2D) = "black" {}
+        _CloudSpeed("Cloud Speed", Range(0, 10)) = 1
     }
     SubShader
     {
         Tags { "RenderType"="Opaque" }
         LOD 100
-
 
         Pass
         {
@@ -63,6 +66,11 @@ Shader "Custom/Skybox"
             float _kSunBrightness;
             float _kMoonBrightness;
             float _MoonRatio;
+            sampler2D _StarNoiseTex;
+            float _StarIntensity;
+            sampler2D _CloudTexture;
+            float4 _CloudTexture_ST;
+            float _CloudSpeed;
 
             #define PositivePow(base, power) pow(abs(base), power)
 
@@ -259,6 +267,12 @@ Shader "Custom/Skybox"
                 return cIn + _GroundColor.rgb * _GroundColor.rgb * cOut;
             }
 
+            float random(float2 p) {
+                p = frac(p * float2(123.34, 345.45));
+                p += dot(p, p + 34.345);
+                return frac(p.x + p.y);
+            }
+
             fixed4 frag(v2f i) : SV_Target
             {
                 float3 dir = normalize(i.worldPos.xyz);
@@ -311,14 +325,25 @@ Shader "Custom/Skybox"
 
                 if (y < 0.0)
                 {
+                    // Sun
                     // The sun should have a stable intensity in its course in the sky. Moreover it should match the highlight of a purely specular material.
                     // This matching was done using the standard shader BRDF1 on the 5/31/2017
                     // Finally we want the sun to be always bright even in LDR thus the normalization of the lightColor for low intensity.
                     float lightColorIntensity = max(length(_SunColor.xyz), 0.25);
-
                     float3 sunColor = kHDSundiskIntensityFactor * saturate(cOut) * _SunColor.xyz / lightColorIntensity;
                     col += sunColor * calcSunAttenuation(_SunDirection.xyz, eyeRay);
 
+
+                    // Cloud, simplest skybox texture cloud
+                    float2 skyUV = eyeRay.xz / sqrt(abs(eyeRay.y));
+                    float t = frac(0.1f * _CloudSpeed * fmod(_Time.y, 100));
+                    float cloud = tex2D(_CloudTexture, float2(skyUV.x / _CloudTexture_ST.x + t, skyUV.y / _CloudTexture_ST.y + t)).r;
+                    //cloud = smoothstep(0, 0.7, cloud);
+                    cloud = smoothstep(0, 1, sqrt(cloud));
+                    col += fixed3(cloud, cloud, cloud);
+
+
+                    // Moon
                     // Calculate the moon disk, according to how sun disk is calculated
                     // float3 moonColor = kHDSundiskIntensityFactor * saturate(cOut) * _SunColor.xyz / lightColorIntensity;
                     /*float3 moonColor = kHDSundiskIntensityFactor * 0.1f * _MoonColor.xyz / lightColorIntensity;
@@ -342,32 +367,34 @@ Shader "Custom/Skybox"
                         float moonShineRadius2 = _MoonSize * _MoonSize;
                         float moonMaxRadius2 = moonShineRadius2 * 1.2f; // Manually Decide!! If need change, should change with TEST!!
                         if (moonRadius2 < moonMaxRadius2) {
-
                             // _MoonRatio : [-2, 2], from first quarter to last quater, 0 is full moon
                             float occlusion = 1; // how the moon is occluded, to change its shape, we use SDF to calculate
                             
                             float circleHorizontalLen = sqrt(max(moonShineRadius2 * 1.5f - moonAxis.x * moonAxis.x, 0));
-                            
                             float r = sign(_MoonRatio) - _MoonRatio;
                             float occlusionSDF = sign(_MoonRatio) * moonAxis.y - sign(_MoonRatio) * r * circleHorizontalLen;
        
                             float maxSDF = 0.1f;
                             occlusion = 1 - saturate(occlusionSDF / maxSDF);
                             occlusion = pow(occlusion, 3);
-                            
-                            
                             // col += float3(occlusion, occlusion, occlusion);
 
                             float moonAttenuate = (moonMaxRadius2 - moonRadius2) / (moonMaxRadius2 - moonShineRadius2) 
                                 * occlusion * saturate(_SunDirection.y * _SunDirection.y * 10);
                             col += lerp(float3(0, 0, 0), _MoonColor, saturate(moonAttenuate));
-                            
-                            
                         }
-                        
                     }
 
-                    // col += moonColor;
+                    
+                    // Stars
+                    if (_SunDirection.y < 0 && cloud < 0.05f)
+                    {
+                        float star = smoothstep(_StarIntensity, 1, tex2D(_StarNoiseTex, skyUV).r);
+                        float t = random(skyUV * 100) * 5.0f + fmod(_Time.y, 100);
+                        star *= smoothstep(0, 1, sin(2 * t)); // make the star shine
+                        star *= smoothstep(0, -0.4, _SunDirection.y); // make the star show up and fade with moon
+                        col += float3(star, star, star);
+                    }
                 }
                 else if (y < 1) // horizon, y in [0, 1)
                 {
