@@ -16,6 +16,8 @@ public class WeatherManager : MonoBehaviour
     [Tooltip("when the system begin, in hour")]
     public float worldBeginTime = 0;
 
+    public bool cloudyDay = false;
+
     float worldTime = 0; // when in world now (in mins)
     float timeRatio; // timeRatio in [0, 1]; 0 => night, 1 => noon
 
@@ -44,6 +46,15 @@ public class WeatherManager : MonoBehaviour
     public void InitMat()
     {
         worldTime = (worldBeginTime * 60) % 1440;
+        if(cloudyDay)
+        {
+            skyboxMat.SetColor("_SkyTint", new Color(11f/256f, 12f/256f, 13f/256f));
+        }
+        else
+        {
+            skyboxMat.SetColor("_SkyTint", new Color(212f/256f, 212/256f, 218/256f, 1.0f));
+        }
+        
         UpdateSky();
     }
 

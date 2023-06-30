@@ -221,6 +221,7 @@ Shader "Custom/Skybox"
                 // cOut = sunFrontColor * kKmESun + moonFrontColor * kKmEMoon;
                 cOut = sunFrontColor * kKmESun;
 
+                //return cInSun + cInMoon;
                 return cInSun * getRayleighPhase(_SunDirection.xyz, -eyeRay) + cInMoon * getRayleighPhase(-_SunDirection.xyz, -eyeRay);
             }
 
@@ -335,13 +336,16 @@ Shader "Custom/Skybox"
 
 
                     // Cloud, simplest skybox texture cloud
+                    float cloud = 0.0f;
                     float2 skyUV = eyeRay.xz / sqrt(abs(eyeRay.y));
+                    /*
+                 
                     float t = frac(0.1f * _CloudSpeed * fmod(_Time.y, 100));
-                    float cloud = tex2D(_CloudTexture, float2(skyUV.x / _CloudTexture_ST.x + t, skyUV.y / _CloudTexture_ST.y + t)).r;
+                    cloud = tex2D(_CloudTexture, float2(skyUV.x / _CloudTexture_ST.x + t, skyUV.y / _CloudTexture_ST.y + t)).r;
                     //cloud = smoothstep(0, 0.7, cloud);
                     cloud = smoothstep(0, 1, sqrt(cloud));
                     col += fixed3(cloud, cloud, cloud);
-
+                    */
 
                     // Moon
                     // Calculate the moon disk, according to how sun disk is calculated

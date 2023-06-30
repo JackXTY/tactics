@@ -5,9 +5,11 @@ Shader "Custom/PostRaindrop"
     {
         _MainTex("Base (RGB)", 2D) = "white" {}
         _BlurSize("Blur Size", Float) = 1.0
-        _GridNum("Grid Number", Integer) = 20
+        _GridNum("Grid Number", Range(1, 50)) = 15
         _Distortion("Distortion", Float) = 10
         _Blur("Blur", Float) = 1
+        _RainAmount("Rain Amount", Integer) = 3
+        _RainSpeed("Rain Speed", Range(0.2, 3)) = 0.25
     }
     SubShader
     {
@@ -17,6 +19,7 @@ Shader "Custom/PostRaindrop"
         Pass
         {
             CGPROGRAM
+
             #pragma vertex vert
             #pragma fragment frag
 
@@ -30,9 +33,14 @@ Shader "Custom/PostRaindrop"
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
-            int _GridNum;
+            float _GridNum;
             float _Distortion;
             float _Blur;
+            int _RainAmount;
+            float _RainSpeed;
+
+            static const half uvScale[7] = { 0.87, 1.35, 1.18, 0.92, 1.07, 0.84, 1.23 };
+            static const half uvShift[7] = { -0.24, 0.4, 0.12, -0.35, 0.05, -0.09, 0 };
 
             v2f vert (appdata_img v)
             {
@@ -53,7 +61,7 @@ Shader "Custom/PostRaindrop"
                 float t = fmod(_Time.y, 7200);
                 float2 gridNum = float2(_GridNum, _GridNum * _ScreenParams.y / _ScreenParams.x);
                 float2 uv = float2(iuv.x * gridNum.x, iuv.y * gridNum.y * 0.8f);
-                uv.y += 0.25 * t;
+                uv.y += _RainSpeed * t;
                 float2 id = floor(uv);
                 uv = uv - id - float2(0.5, 0.5); // -0.5 ~ 0.5
 
@@ -88,21 +96,24 @@ Shader "Custom/PostRaindrop"
 
                 return drop * dropDir + trail * trailDir;
             }
+            
 
             fixed4 frag(v2f i) : SV_Target
             {
                 float fogTrailTotal = 0;
-                float fogTrail;
-                half2 offset = rainEffect(i.uv * 0.87 - 0.24, fogTrail);
-                fogTrailTotal += fogTrail;
-                offset += rainEffect(i.uv * 1.35 + 0.4, fogTrail);
-                fogTrailTotal += fogTrail;
-                offset += rainEffect(i.uv * 1.18 + 0.12, fogTrail);
-                fogTrailTotal += fogTrail;
+                float fogTrail = 0;
+                half2 offset = half2(0, 0);
+                /*offset += rainEffect(i.uv * uvScale[0] + uvShift[0], fogTrail);
+                fogTrailTotal += fogTrail;*/
+                float2 uv = i.uv;
+                for (int i = 0; i < _RainAmount; i++) {
+                    offset += rainEffect(uv * uvScale[i] + uvShift[i], fogTrail);
+                    fogTrailTotal += fogTrail;
+                }
                 
                 half blur = _Blur * 7 * fogTrailTotal;
                 // fixed4 col = tex2D(_MainTex, i.uv + offset * _Distortion);
-                fixed4 col = tex2Dlod(_MainTex, half4(i.uv + offset * _Distortion, 0, blur));
+                fixed4 col = tex2Dlod(_MainTex, half4(uv + offset * _Distortion, 0, blur));
                 
                 return col;
             }
