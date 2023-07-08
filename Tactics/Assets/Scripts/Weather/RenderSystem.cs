@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 // TODO: save slider information,
 // then when switch camera, set new component's value according to slider
-public enum PostEffect { Blur, Fog, RainDrop, DepthBlur };
+public enum PostEffect { Fog, DepthBlur, RainDrop, Blur };
 
 public class RenderSystem : MonoBehaviour
 {
