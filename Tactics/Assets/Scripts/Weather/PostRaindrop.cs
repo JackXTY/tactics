@@ -7,12 +7,12 @@ public class PostRaindrop : MonoBehaviour
 {
     public Shader postRaindropShader;
     Material material = null;
-	public float gridNum = 15.0f;
+	public float gridNum = 16.0f;
 	public float distortion = 10.0f;
 	public float blur = 1.0f;
 	[Range(1, 7)]
 	public int rainAmount = 3;
-	[Range(0.2f, 3)]
+	[Range(0, 3)]
 	public float rainSpeed = 0.25f;
 
 	private void Start()

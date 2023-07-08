@@ -3,7 +3,9 @@ guid: 523da09e6ef675b44a10a9620818fe03
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - skyboxMat: {fileID: 2100000, guid: fe6b6cf36ab54ed4e9084f37de03fde0, type: 2}
+  - directionalLight: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

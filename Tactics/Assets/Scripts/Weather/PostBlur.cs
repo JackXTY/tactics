@@ -10,10 +10,10 @@ public class PostBlur : MonoBehaviour
 
 	// Blur iterations - larger number means more blur.
 	[Range(0, 4)]
-	public int iterations = 3;
+	public int iterations = 1;
 
 	// Blur spread for each iteration - larger value means more blur
-	[Range(0.2f, 3.0f)]
+	[Range(0.0f, 3.0f)]
 	public float blurSpread = 0.6f;
 
 	[Range(1, 8)]

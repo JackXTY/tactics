@@ -32,7 +32,7 @@ public class PostFog : MonoBehaviour
 	public Color fogColor = Color.white;
 
 	public float fogHeightStart = 0.0f;
-	public float fogHeightEnd = 2.0f;
+	public float fogHeightEnd = 10.0f;
 	public float fogDepthNear = 0.0f;
 	public float fogDepthFar = 100.0f;
 

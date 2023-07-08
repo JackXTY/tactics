@@ -84,7 +84,7 @@ Shader "Learn/DepthBlur"
         }
 
         fixed4 fragSampleDisk(v2f i) : SV_Target
-        {            
+        {
             fixed3 fcol = tex2D(_MainTex, i.uv).rgb;
             fixed3 bcol = fcol;
             float fw = 1.0f, bw = 1.0f;
@@ -116,6 +116,8 @@ Shader "Learn/DepthBlur"
 
             bcol /= bw;
             fcol /= fw;
+
+            // return fixed4(lerp(bcol, fcol, fb), fb);
 
             float fb = _ForegroundScale * fw / (fw + bw);
 

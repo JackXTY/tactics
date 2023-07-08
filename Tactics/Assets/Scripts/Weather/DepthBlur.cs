@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Reference: https://zhuanlan.zhihu.com/p/565511249
+
 [ExecuteInEditMode]
 public class DepthBlur : MonoBehaviour
 {
@@ -12,7 +13,7 @@ public class DepthBlur : MonoBehaviour
 	{
 		get
 		{
-			if(blurShader)
+			if(blurShader && !blurMaterial)
             {
 				blurMaterial = new Material(blurShader);
 			}
@@ -24,8 +25,8 @@ public class DepthBlur : MonoBehaviour
 	public float focusDistance = 10.0f;
 	[Range(0, 20)]
 	public float focusRange = 5.0f;
-	[Range(0.001f, 20)]
-	public float radiusSparse = 1.0f;
+	[Range(0, 20)]
+	public float radiusSparse = 4.0f;
 	[Range(0, 20)]
 	public float simpleBlurRange = 1.0f;
 	[Range(0, 1)]
@@ -66,6 +67,7 @@ public class DepthBlur : MonoBehaviour
 			material.SetTexture("_BlurTex", blur1);
 
 			// material.SetTexture("_BlurTex", blur0);
+			// Graphics.Blit(blur0, dest);
 
 			Graphics.Blit(src, dest, material, 3);
 			coc.Release();
