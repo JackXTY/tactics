@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73e132c3175b59a42bc587bb4a27613c, type: 3}
+  m_Name: AdditionalPostProcessData
+  m_EditorClassIdentifier: 
+  shaders:
+    postFog: {fileID: 4800000, guid: 0d3565796113b2047bbc8ae1271965ce, type: 3}
+    depthBlur: {fileID: 4800000, guid: 08e9f5278eef2824c854310f1aad3b0c, type: 3}
+    postRainDrop: {fileID: 4800000, guid: 83d55745a7241c340a0d6d7b095c3318, type: 3}
+    gaussianBlur: {fileID: 4800000, guid: 03a232ed80599c74a8f2bcabffc2f8a8, type: 3}
