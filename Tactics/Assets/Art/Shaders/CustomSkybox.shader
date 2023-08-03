@@ -55,62 +55,49 @@ Shader "Custom/Skybox"
         _StarNoiseTex("Star Noise Texture", 2D) = "black" {}
         _StarIntensity("Star Intensity", Range(0, 1)) = 0.4
     }
+
     SubShader
     {
-        Tags { "RenderType" = "Opaque" }
+        Tags { "RenderType" = "Opaque" "Queue" = "Geometry" "RenderPipeline" = "UniversalPipeline" }
         LOD 100
 
-        Pass
-        {
-            HLSLPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
+        HLSLINCLUDE
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
             // #pragma shader_feature_local _TEXTURE_CLOUD_ON
-            #pragma shader_feature_local _CLOUDY
+            #pragma multi_compile_local _ _CLOUDY
 
-            #include "UnityCG.cginc"
-            #include "Lighting.cginc"
 
-            struct appdata
-            {
-                float4 vertex : POSITION;
-                float3 uv : TEXCOORD0;
-                uint vertexID : SV_VertexID;
-            };
-
-            struct v2f
-            {
-                float3 uv : TEXCOORD0;
-                float4 vertex : SV_POSITION;
-                float3 worldPos : TEXCOORD1;
-            };
+            
 
             float _TimeRatio;
-            sampler2D _MainTex;
-            float4 _MainTex_ST;
+            // sampler2D _MainTex;
+            // float4 _MainTex_ST;
             float _HorizonThreshold;
             float _OffsetHorizon;
-            fixed4 _SkyTint;
-            fixed4 _GroundColor;
+            half4 _SkyTint;
+            half4 _GroundColor;
             float _SunSize;
             float _SunSizeConvergence;
             float _MoonSize;
             float _MoonSizeConvergence;
-            fixed4 _MoonColor;
+            half4 _MoonColor;
             float _AtmosphereThickness;
             float _Exposure;
             float _kSunBrightness;
             float _kMoonBrightness;
             float _MoonRatio;
-            sampler2D _StarNoiseTex;
+            // sampler2D _StarNoiseTex;
+            TEXTURE2D(_StarNoiseTex); SAMPLER(sampler_StarNoiseTex);
             float _StarIntensity;
 
             float _MinCloudyRatio;
             float _CloudySunFactor;
             float4 _CloudyTopColor;
             float4 _CloudyBottomColor;
-            sampler2D _CloudTexture;
+            // sampler2D _CloudTexture;
+            TEXTURE2D(_CloudTexture); SAMPLER(sampler_CloudTexture);
             float4 _CloudTexture_ST;
             float _CloudSpeed;
             float _CloudAlpha;
@@ -121,7 +108,7 @@ Shader "Custom/Skybox"
             float4 _SunDirection;
             float4 _SunColor;
             // #define _SunDirection _WorldSpaceLightPos0
-            #define _SunColor _LightColor0
+            #define _SunColor _MainLightColor //_LightColor0
 
             // RGB wavelengths
             // .35 (.62=158), .43 (.68=174), .525 (.75=190)
@@ -161,14 +148,7 @@ Shader "Custom/Skybox"
             static const float kKr4PI = kRAYLEIGH * 4.0 * 3.14159265;
 
 
-            v2f vert(appdata v)
-            {
-                v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = v.uv;
-                o.worldPos = mul(unity_ObjectToWorld, v.vertex);
-                return o;
-            }
+            
 
             // Calculates the Rayleigh phase function
             float getRayleighPhase(float eyeCos2)
@@ -206,8 +186,8 @@ Shader "Custom/Skybox"
 
             float calcMoonAttenuation(float3 lightPos, float3 ray)
             {
-                float focusedEyeCos = pow(saturate(dot(lightPos, ray)), _MoonSizeConvergence);
-                return getMiePhase(-focusedEyeCos, focusedEyeCos * focusedEyeCos, _MoonSize);
+            float focusedEyeCos = pow(saturate(dot(lightPos, ray)), _MoonSizeConvergence);
+            return getMiePhase(-focusedEyeCos, focusedEyeCos * focusedEyeCos, _MoonSize);
             }
 
             float3 renderCloudyColor(float3 eyeRay, float3 cameraPos, float3 kInvWavelength,
@@ -331,16 +311,54 @@ Shader "Custom/Skybox"
                 cOut = clamp(attenuate, 0.0, 1.0);
 
                 return cIn + _GroundColor.rgb * _GroundColor.rgb * cOut;
-            }
+                }
 
-            float random(float2 p) {
+                float random(float2 p) {
                 p = frac(p * float2(123.34, 345.45));
                 p += dot(p, p + 34.345);
                 return frac(p.x + p.y);
             }
 
-            fixed4 frag(v2f i) : SV_Target
+            
+        ENDHLSL
+
+        Pass
+        {
+            // Tags{"LightMode" = "UniversalForward"}
+
+            HLSLPROGRAM
+
+            #pragma vertex vert
+            #pragma fragment frag
+
+
+            struct a2v
             {
+                float4 vertex : POSITION;
+                float3 uv : TEXCOORD0;
+                uint vertexID : SV_VertexID;
+            };
+
+            struct v2f
+            {
+                float3 uv : TEXCOORD0;
+                float4 vertex : SV_POSITION;
+                float3 worldPos : TEXCOORD1;
+            };
+
+            v2f vert(a2v v)
+            {
+                v2f o;
+                //o.vertex = UnityObjectToClipPos(v.vertex);
+                o.vertex = TransformObjectToHClip(v.vertex.xyz);
+                o.uv = v.uv;
+                o.worldPos = mul(UNITY_MATRIX_M, v.vertex).xyz;
+                return o;
+            }
+
+            half4 frag(v2f i) : SV_Target
+            {
+
                 // _SunDirection *= 1 - 2 * step(0.25f, abs(_TimeRatio - 0.5f));
                 // use worldPos rather than i.uv to sample, to avoid triangle fragment
                 float3 dir = normalize(i.worldPos.xyz);
@@ -382,12 +400,12 @@ Shader "Custom/Skybox"
 
                 if (eyeRay.y >= _OffsetHorizon)
                 {
-            #ifdef _CLOUDY
+                #ifdef _CLOUDY
                     skyColor = renderCloudyColor(eyeRay, cameraPos, kInvWavelength, cIn, cOut) * _CloudySunFactor
                         + renderSkyColor(eyeRay, cameraPos, kInvWavelength, cIn, cOut) * (1 - _CloudySunFactor);
-            #else
+                #else
                     skyColor = renderSkyColor(eyeRay, cameraPos, kInvWavelength, cIn, cOut);
-            #endif
+                #endif
                 }
                 else
                 {
@@ -461,45 +479,49 @@ Shader "Custom/Skybox"
 
                             float moonAttenuate = (moonMaxRadius2 - moonRadius2) / (moonMaxRadius2 - moonShineRadius2)
                                 * occlusion * saturate(_SunDirection.y * _SunDirection.y * 10);
-                            col += lerp(float3(0, 0, 0), _MoonColor, saturate(moonAttenuate));
+                            col += lerp(float3(0, 0, 0), _MoonColor.xyz, saturate(moonAttenuate));
                         }
                     }
-                //#else
-#ifdef _CLOUDY
-                    // Cloud, simplest skybox texture cloud
-                    float t = frac(0.1f * _CloudSpeed * fmod(_Time.y, 100));
-                    cloud = tex2D(_CloudTexture, float2(skyUV.x / _CloudTexture_ST.x + t, skyUV.y / _CloudTexture_ST.y + t)).r;
-                    //cloud = smoothstep(0, 0.7, cloud);
-                    cloud = smoothstep(0, 1, sqrt(cloud));
-                    col += _CloudAlpha * fixed3(cloud, cloud, cloud);
-                #endif
+                    //#else
+                    #ifdef _CLOUDY
+                        // Cloud, simplest skybox texture cloud
+                        float t = frac(0.1f * _CloudSpeed * fmod(_Time.y, 100));
+                        // cloud = tex2D(_CloudTexture, float2(skyUV.x / _CloudTexture_ST.x + t, skyUV.y / _CloudTexture_ST.y + t)).r;
+                        cloud = SAMPLE_TEXTURE2D(_CloudTexture, sampler_CloudTexture, float2(skyUV.x / _CloudTexture_ST.x + t, skyUV.y / _CloudTexture_ST.y + t)).r;
+                        //cloud = smoothstep(0, 0.7, cloud);
+                        cloud = smoothstep(0, 1, sqrt(cloud));
+                        col += _CloudAlpha * half3(cloud, cloud, cloud);
+                    #endif
 
-                    // Stars
-                    if (_SunDirection.y < 0 && cloud < 0.35f)
-                    {
-                        float star = smoothstep(_StarIntensity, 1, tex2D(_StarNoiseTex, skyUV).r);
-                        float t = random(skyUV * 100) * 5.0f + fmod(_Time.y, 100);
-                        star *= smoothstep(0, 1, sin(2 * t)); // make the star shine
-                        star *= smoothstep(0, -0.4, _SunDirection.y); // make the star show up and fade with moon
-                        col += float3(star, star, star);
+                        // Stars
+                        if (_SunDirection.y < 0 && cloud < 0.35f)
+                        {
+                            //float star = smoothstep(_StarIntensity, 1, tex2D(_StarNoiseTex, skyUV).r);
+                            float star = smoothstep(_StarIntensity, 1, SAMPLE_TEXTURE2D(_StarNoiseTex, sampler_StarNoiseTex, skyUV).r);
+                            float t = random(skyUV * 100) * 5.0f + fmod(_Time.y, 100);
+                            star *= smoothstep(0, 1, sin(2 * t)); // make the star shine
+                            star *= smoothstep(0, -0.4, _SunDirection.y); // make the star show up and fade with moon
+                            col += float3(star, star, star);
+                        }
                     }
-                }
-                else if (y < 1) // horizon, y in [0, 1)
-                {
-                    float3 tempEyeRay = eyeRay;
-                    tempEyeRay.y = _OffsetHorizon;
-                #ifdef _CLOUDY
-                    skyColor = renderCloudyColor(eyeRay, cameraPos, kInvWavelength, cIn, cOut) * _CloudySunFactor
-                        + renderSkyColor(eyeRay, cameraPos, kInvWavelength, cIn, cOut) * (1 - _CloudySunFactor);
-                #else
-                    skyColor = renderSkyColor(tempEyeRay, cameraPos, kInvWavelength, cIn, cOut);
-                #endif
-                    col = lerp(skyColor, groundColor, y);
+                    else if (y < 1) // horizon, y in [0, 1)
+                    {
+                        float3 tempEyeRay = eyeRay;
+                        tempEyeRay.y = _OffsetHorizon;
+                    #ifdef _CLOUDY
+                        skyColor = renderCloudyColor(eyeRay, cameraPos, kInvWavelength, cIn, cOut) * _CloudySunFactor
+                            + renderSkyColor(eyeRay, cameraPos, kInvWavelength, cIn, cOut) * (1 - _CloudySunFactor);
+                    #else
+                        skyColor = renderSkyColor(tempEyeRay, cameraPos, kInvWavelength, cIn, cOut);
+                    #endif
+                        col = lerp(skyColor, groundColor, y);
+                    }
+
+                    return half4(col * _Exposure, 1);
                 }
 
-                return fixed4(col * _Exposure, 1);
-            }
             ENDHLSL
         }
     }
+    Fallback "Hidden/Universal Render Pipeline/FallbackError"
 }

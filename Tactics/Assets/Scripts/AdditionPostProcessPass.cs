@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,8 +10,9 @@ namespace UnityEngine.Experiemntal.Rendering.Universal
     public class AdditionPostProcessPass : ScriptableRenderPass
     {
         RenderTargetIdentifier src;
-        RenderTargetIdentifier depthTarget;
         RenderTargetIdentifier dest;
+        RenderTargetIdentifier depthTarget;
+        RenderTargetIdentifier colorTarget;
 
         const string k_RenderPostProcessingTag = "Render AdditionalPostProcessing Effects";
         // const string k_RenderFinalPostProcessingTag = "Render Final AdditionalPostProcessing Pass";
@@ -23,6 +25,7 @@ namespace UnityEngine.Experiemntal.Rendering.Universal
         MaterialLibrary m_Materials;
         AdditionalPostProcessData m_Data;
 
+        RenderTargetHandle destBuffer;
         RenderTargetHandle gaussianBlurBuffer0;
         RenderTargetHandle gaussianBlurBuffer1;
         RenderTargetHandle tempBuffer0;
@@ -30,6 +33,7 @@ namespace UnityEngine.Experiemntal.Rendering.Universal
 
         public AdditionPostProcessPass()
         {
+            destBuffer.Init("_destBuffer");
             gaussianBlurBuffer0.Init("_gaussianBlurBuffer0");
             gaussianBlurBuffer1.Init("_gaussianBlurBuffer1");
             tempBuffer0.Init("_tempBuffer0");
@@ -62,26 +66,54 @@ namespace UnityEngine.Experiemntal.Rendering.Universal
             }
 
             var cmd = CommandBufferPool.Get(k_RenderPostProcessingTag);
-            src = renderingData.cameraData.renderer.cameraColorTarget;
-            dest = src; // So far, we just take it as post process render pass
+            RenderTextureDescriptor desc = renderingData.cameraData.cameraTargetDescriptor;
+            colorTarget = renderingData.cameraData.renderer.cameraColorTarget;
             depthTarget = renderingData.cameraData.renderer.cameraDepthTarget;
+            src = colorTarget;
+            dest = src;
+
+            // Since we must copy the render result for single-pass post-effect,
+            // to reduce times of cmd.Blit(), we use a buffer to avoid copy multiple times for each single-pass post-effect.
+            Action SwitchForSinglePassPostEffect = () =>{
+                if (src == colorTarget){
+                    cmd.GetTemporaryRT(destBuffer.id, desc);
+                    dest = destBuffer.Identifier();
+                }else{
+                    dest = colorTarget;
+                }
+            };
+
             if (m_PostFog.IsActive())
             {
+                SwitchForSinglePassPostEffect();
                 RenderPostFog(cmd, ref renderingData, m_Materials.postFog);
+                src = dest;
+                dest = colorTarget;
             }
             if (m_DepthBlur.IsActive())
             {
                 RenderDepthBlur(cmd, ref renderingData, m_Materials.depthBlur);
+                src = dest;
             }
             if (m_PostRainDrop.IsActive())
             {
+                SwitchForSinglePassPostEffect();
                 RenderPostRainDrop(cmd, ref renderingData, m_Materials.postRainDrop);
+                src = dest;
+                dest = colorTarget;
             }
             if (m_GaussianBlur.IsActive())
             {
                 RenderGaussianBlur(cmd, ref renderingData, m_Materials.gaussianBlur);
+                src = dest;
             }
-            
+
+            if (src != colorTarget)
+            {
+                cmd.Blit(src, colorTarget);
+                cmd.ReleaseTemporaryRT(destBuffer.id);
+            }
+
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
         }
@@ -138,8 +170,8 @@ namespace UnityEngine.Experiemntal.Rendering.Universal
 
 			// Vector3 cloudBoxMin = fogBoxTrans.position - fogBoxTrans.localScale / 2;
 			// Vector3 cloudBoxMax = fogBoxTrans.position + fogBoxTrans.localScale / 2;
-            mat.SetVector("_CloudBoxMin", m_PostFog.minCorner.value);
-            mat.SetVector("_CloudBoxMax", m_PostFog.maxCorner.value);
+            // mat.SetVector("_CloudBoxMin", m_PostFog.minCorner.value);
+            // mat.SetVector("_CloudBoxMax", m_PostFog.maxCorner.value);
 
 			if(m_PostFog.expFog.value)
             {
@@ -193,7 +225,12 @@ namespace UnityEngine.Experiemntal.Rendering.Universal
             mat.SetInteger("_RainAmount", m_PostRainDrop.rainAmount.value);
             mat.SetFloat("_RainSpeed", m_PostRainDrop.rainSpeed.value);
 
+            // RenderTextureDescriptor desc = renderingData.cameraData.cameraTargetDescriptor;
             cmd.Blit(src, dest, mat);
+            // cmd.GetTemporaryRT(tempBuffer0.id, desc);
+            // cmd.Blit(src, tempBuffer0.id, mat);
+            // cmd.Blit(tempBuffer0.id, dest);
+            // cmd.ReleaseTemporaryRT(tempBuffer0.id);
         }
 
         public void RenderGaussianBlur(CommandBuffer cmd, ref RenderingData renderingData, Material mat)
@@ -218,11 +255,12 @@ namespace UnityEngine.Experiemntal.Rendering.Universal
                 cmd.GetTemporaryRT(gaussianBlurBuffer0.id, opaqueDesc, m_GaussianBlur.filterMode.value);
   
                 cmd.Blit(gaussianBlurBuffer1.Identifier(), gaussianBlurBuffer0.Identifier(), mat, 1);
-
+                cmd.ReleaseTemporaryRT(gaussianBlurBuffer1.id);
             }
 
             cmd.Blit(gaussianBlurBuffer0.Identifier(), dest);
-            cmd.GetTemporaryRT(gaussianBlurBuffer0.id, opaqueDesc, m_GaussianBlur.filterMode.value);
+            // cmd.GetTemporaryRT(gaussianBlurBuffer0.id, opaqueDesc, m_GaussianBlur.filterMode.value);
+            cmd.ReleaseTemporaryRT(gaussianBlurBuffer0.id);
 
         }
     }

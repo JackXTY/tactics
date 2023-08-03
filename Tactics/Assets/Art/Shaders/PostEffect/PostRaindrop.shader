@@ -1,4 +1,4 @@
-Shader "Custom/PostRaindrop"
+Shader "Universal Render Pipeline/Post Effect/PostRaindrop"
 {
     // Reference from https://zhuanlan.zhihu.com/p/298606553
     Properties
@@ -13,17 +13,17 @@ Shader "Custom/PostRaindrop"
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags { "RenderType"="Opaque" "RenderPipeline" = "UniversalPipeline"}
         LOD 100
 
-        Pass
-        {
-            CGPROGRAM
+        HLSLINCLUDE
 
-            #pragma vertex vert
-            #pragma fragment frag
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-            #include "UnityCG.cginc"
+            struct appdata_img {
+                float4 vertex: POSITION;
+                float2 texcoord : TEXCOORD0;
+            };
 
             struct v2f
             {
@@ -31,7 +31,7 @@ Shader "Custom/PostRaindrop"
                 float4 vertex : SV_POSITION;
             };
 
-            sampler2D _MainTex;
+            TEXTURE2D(_MainTex); SAMPLER(sampler_MainTex);
             float4 _MainTex_ST;
             float _GridNum;
             float _Distortion;
@@ -42,10 +42,11 @@ Shader "Custom/PostRaindrop"
             static const half uvScale[7] = { 0.87, 1.35, 1.18, 0.92, 1.07, 0.84, 1.23 };
             static const half uvShift[7] = { -0.24, 0.4, 0.12, -0.35, 0.05, -0.09, 0 };
 
-            v2f vert (appdata_img v)
+
+            v2f vert(appdata_img v)
             {
                 v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.vertex = TransformObjectToHClip(v.vertex);
                 o.uv = TRANSFORM_TEX(v.texcoord, _MainTex);
                 return o;
             }
@@ -58,28 +59,28 @@ Shader "Custom/PostRaindrop"
 
             half2 rainEffect(float2 iuv, out float fogTrail)
             {
-                float t = fmod(_Time.y, 7200);
-                float2 gridNum = float2(_GridNum, _GridNum * _ScreenParams.y / _ScreenParams.x);
-                float2 uv = float2(iuv.x * gridNum.x, iuv.y * gridNum.y * 0.8f);
+                half t = fmod(_Time.y, 7200);
+                half2 gridNum = float2(_GridNum, _GridNum * _ScreenParams.y / _ScreenParams.x);
+                half2 uv = float2(iuv.x * gridNum.x, iuv.y * gridNum.y * 0.8f);
                 uv.y += _RainSpeed * t;
-                float2 id = floor(uv);
+                half2 id = floor(uv);
                 uv = uv - id - float2(0.5, 0.5); // -0.5 ~ 0.5
 
                 half noise = random(id);
                 t += noise * 6.2831;
 
                 half w = iuv.y * 4;
-                float dropX = (noise - 0.5) * 0.8;; // -0.4 - 0.4
+                half dropX = (noise - 0.5) * 0.8;; // -0.4 - 0.4
                 dropX += (0.4 - abs(dropX)) * sin(3 * w) * pow(sin(w), 6) * 0.45;// 0.4- abs(x). force the drop only move inside the grid
 
-                float dropY = -sin(t + sin(t + sin(t) * 0.5)) * 0.45;
+                half dropY = -sin(t + sin(t + sin(t) * 0.5)) * 0.45;
                 dropY -= (uv.x - dropX) * (uv.x - dropX) * 5;
-                float2 dropDir = uv - float2(dropX, dropY);
-                fixed drop = smoothstep(0.07, 0.04, length(dropDir));
+                half2 dropDir = uv - float2(dropX, dropY);
+                half drop = smoothstep(0.07, 0.04, length(dropDir));
                 // draw a circle, interpolate length(uv) from 0.05 to 0.03, [0.05, 0.03] => [0, 1]
 
-                float2 trailDir = float2(uv.x - dropX, (frac(8 * (uv.y + 0.15 * t)) - 0.5) / 8);
-                fixed trail = smoothstep(0.04, 0.01, length(trailDir));
+                half2 trailDir = float2(uv.x - dropX, (frac(8 * (uv.y + 0.15 * t)) - 0.5) / 8);
+                half trail = smoothstep(0.04, 0.01, length(trailDir));
                 trail *= smoothstep(0.5, dropY, uv.y); // trail fade
                 trail *= smoothstep(0.05, -0.05, dropY - uv.y); // clear trail under the drop
 
@@ -96,12 +97,14 @@ Shader "Custom/PostRaindrop"
 
                 return drop * dropDir + trail * trailDir;
             }
-            
 
-            fixed4 frag(v2f i) : SV_Target
+
+            half4 frag(v2f i) : SV_Target
             {
-                float fogTrailTotal = 0;
-                float fogTrail = 0;
+                // return SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
+
+                half fogTrailTotal = 0;
+                half fogTrail = 0;
                 half2 offset = half2(0, 0);
                 /*offset += rainEffect(i.uv * uvScale[0] + uvShift[0], fogTrail);
                 fogTrailTotal += fogTrail;*/
@@ -110,22 +113,35 @@ Shader "Custom/PostRaindrop"
                     offset += rainEffect(uv * uvScale[i] + uvShift[i], fogTrail);
                     fogTrailTotal += fogTrail;
                 }
-                
+
                 half blur = _Blur * fogTrailTotal;
                 uv += offset * _Distortion;
-                fixed4 col = tex2D(_MainTex, uv);
+                half4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv);
                 if (blur > 0.5) {
                     half del = 0.002;
-                    col += 0.5f * (tex2D(_MainTex, uv + blur * half2(del, 0)) + tex2D(_MainTex, uv + blur * half2(0, del)) + tex2D(_MainTex, uv + blur * half2(-del, 0)) + tex2D(_MainTex, uv + blur * half2(0, -del)));
-                    col += 0.25f * (tex2D(_MainTex, uv + blur * half2(del, del)) + tex2D(_MainTex, uv + blur * half2(del, -del)) + tex2D(_MainTex, uv + blur * half2(-del, del)) + tex2D(_MainTex, uv + blur * half2(-del, -del)));
+                    col += 0.5f * (SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv + blur * half2(del, 0)) +
+                        SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv + blur * half2(0, del)) +
+                        SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv + blur * half2(-del, 0)) +
+                        SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv + blur * half2(0, -del)));
+                    col += 0.25f * (SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv + blur * half2(del, del)) +
+                        SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv + blur * half2(del, -del)) +
+                        SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv + blur * half2(-del, del)) +
+                        SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv + blur * half2(-del, -del)));
                     col /= 4;
                 }
                 // fixed4 col = tex2Dlod(_MainTex, half4(uv + offset * _Distortion, 0, blur));
-                
+
                 return col;
             }
-            ENDCG
+        ENDHLSL
+
+        Pass
+        {
+            HLSLPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            ENDHLSL
         }
     }
-    FallBack "Diffuse"
+    FallBack "Hidden/Universal Render Pipeline/Terrain/Unlit"
 }

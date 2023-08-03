@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.07584245, g: 0.092925765, b: 0.12792605, a: 1}
+  m_IndirectSpecularColor: {r: 0.07916077, g: 0.11813031, b: 0.25018278, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -349,7 +349,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5749734}
-  m_LocalRotation: {x: 0.38268346, y: -0, z: -0, w: 0.9238795}
+  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 336.01, z: 0}
   m_LocalScale: {x: 1.16056, y: 1.1605598, z: 1.1605599}
   m_ConstrainProportionsScale: 0
@@ -5408,7 +5408,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &655055957
 RectTransform:
   m_ObjectHideFlags: 0
@@ -11826,6 +11826,55 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -5219479171448085126, guid: 3c5768a23cb624b408b3d490be660ac7, type: 3}
+--- !u!1 &1547304174
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1547304176}
+  - component: {fileID: 1547304175}
+  m_Layer: 0
+  m_Name: Volume
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1547304175
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1547304174}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IsGlobal: 1
+  priority: 0
+  blendDistance: 0
+  weight: 1
+  sharedProfile: {fileID: 11400000, guid: 74ee4b8e8161ae94e9fc943d0a680929, type: 2}
+--- !u!4 &1547304176
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1547304174}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 9
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1549231429
 GameObject:
   m_ObjectHideFlags: 0
@@ -14735,7 +14784,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1841145639
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17859,6 +17908,10 @@ PrefabInstance:
       propertyPath: fogbox
       value: 
       objectReference: {fileID: 404290744}
+    - target: {fileID: 4451626255430792753, guid: 9b93a873cd9121245b39cc103a152451, type: 3}
+      propertyPath: volume
+      value: 
+      objectReference: {fileID: 1547304175}
     - target: {fileID: 8461807042134185896, guid: 9b93a873cd9121245b39cc103a152451, type: 3}
       propertyPath: sun
       value: 
@@ -17869,7 +17922,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8461807042134185896, guid: 9b93a873cd9121245b39cc103a152451, type: 3}
       propertyPath: weather
-      value: 2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8461807042134185896, guid: 9b93a873cd9121245b39cc103a152451, type: 3}
       propertyPath: cloudyDay
@@ -17889,7 +17942,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8461807042134185896, guid: 9b93a873cd9121245b39cc103a152451, type: 3}
       propertyPath: worldBeginTime
-      value: 9
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 8461807042134185896, guid: 9b93a873cd9121245b39cc103a152451, type: 3}
       propertyPath: rainParticleObj

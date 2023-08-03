@@ -135,6 +135,6 @@ Material:
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _GroundColor: {r: 0.5566038, g: 0.5513528, b: 0.54960245, a: 1}
     - _MoonColor: {r: 1, g: 0.98337823, b: 0.8836478, a: 128}
-    - _SkyTint: {r: 0, g: 0, b: 0, a: 0}
+    - _SkyTint: {r: 0.19873612, g: 0.55106825, b: 0.8207547, a: 0}
     - _SunDirection: {r: -0, g: 0.99999994, b: -0.000000059604645, a: 0}
   m_BuildTextureStacks: []

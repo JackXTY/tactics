@@ -30,8 +30,8 @@ namespace UnityEngine.Experiemntal.Rendering.Universal
 		public FloatParameter noiseAmount = new FloatParameter(1.0f);
 
 		// public Transform fogBoxTrans;
-		public Vector3Parameter minCorner = new Vector3Parameter(new Vector3(-100.0f, -50.0f, -100.0f));
-		public Vector3Parameter maxCorner = new Vector3Parameter(new Vector3(100.0f, 50.0f, 100.0f));
+		// public Vector3Parameter minCorner = new Vector3Parameter(new Vector3(-100.0f, -50.0f, -100.0f));
+		// public Vector3Parameter maxCorner = new Vector3Parameter(new Vector3(100.0f, 50.0f, 100.0f));
 
 		public BoolParameter expFog = new BoolParameter(false);
 		public bool IsActive()

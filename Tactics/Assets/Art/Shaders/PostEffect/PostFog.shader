@@ -1,4 +1,4 @@
-Shader "Custom/PostFog"
+Shader "Universal Render Pipeline/Post Effect/PostFog"
 {
 	properties{
 		_MainTex("Base (RGB)", 2D) = "white" {}
@@ -15,29 +15,37 @@ Shader "Custom/PostFog"
 		[Toggle] _exp_fog("Enable Exp Fog", Float) = 0
 	}
 	SubShader{
-		CGINCLUDE
+		HLSLINCLUDE
 
-		#include "UnityCG.cginc"
+		#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+		#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
+		#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 
 		#pragma multi_compile __ _EXP_FOG_ON
 
 		float4x4 _FrustumCornersRay;
 
-		sampler2D _MainTex;
+		TEXTURE2D(_MainTex); SAMPLER(sampler_MainTex);
 		half4 _MainTex_TexelSize;
-		sampler2D _CameraDepthTexture;
+
 		half _FogDensity;
-		fixed4 _FogColor;
+		half4 _FogColor;
 		float _FogHeightStart;
 		float _FogHeightEnd;
 		float _FogDepthNear;
 		float _FogDepthFar;
-		sampler2D _NoiseTex;
+		// sampler2D _NoiseTex;
+		TEXTURE2D(_NoiseTex); SAMPLER(sampler_NoiseTex);
 		half _FogXSpeed;
 		half _FogYSpeed;
 		half _NoiseAmount;
 		float3 _CloudBoxMin;
 		float3 _CloudBoxMax;
+
+		struct appdata_img {
+			float4 vertex: POSITION;
+			float2 texcoord : TEXCOORD0;
+		};
 
 		struct v2f {
 			float4 pos : SV_POSITION;
@@ -48,7 +56,7 @@ Shader "Custom/PostFog"
 
 		v2f vert(appdata_img v) {
 			v2f o;
-			o.pos = UnityObjectToClipPos(v.vertex);
+			o.pos = TransformObjectToHClip(v.vertex);
 
 			o.uv = v.texcoord;
 			o.uv_depth = v.texcoord;
@@ -81,6 +89,7 @@ Shader "Custom/PostFog"
 			return o;
 		}
 
+		/*
 		float2 rayBoxDst(float3 invRaydir)
 		{
 			float3 t0 = (_CloudBoxMin - _WorldSpaceCameraPos.xyz) * invRaydir;
@@ -95,23 +104,26 @@ Shader "Custom/PostFog"
 			float dstInsideBox = max(0, dstB - dstToBox);
 			return float2(dstToBox, dstInsideBox);
 		}
+		*/
 
-		fixed4 frag(v2f i) : SV_Target {
-			float linearDepth = LinearEyeDepth(SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv_depth));
-
-			float2 rayBoxVec = rayBoxDst(1 / i.interpolatedRay.xyz);
+		half4 frag(v2f i) : SV_Target {
+			float linearDepth = LinearEyeDepth(SampleSceneDepth(i.uv_depth), _ZBufferParams);
+						
 			float worldPosDepth = linearDepth;
+			/*
+			float2 rayBoxVec = rayBoxDst(1 / i.interpolatedRay.xyz);
 			if (rayBoxVec.x + rayBoxVec.y < linearDepth)
 			{
 				worldPosDepth = rayBoxVec.x + rayBoxVec.y;
 			}
+			*/
 			float3 worldPos = _WorldSpaceCameraPos + worldPosDepth * i.interpolatedRay.xyz;
 
 			/*return fixed4(linearDepth, linearDepth, linearDepth, 1);
 			return fixed4(normalize(worldPos) * 0.5f + fixed3(0.5, 0.5, 0.5), 1);*/
 
 			float2 speed = _Time.y * float2(_FogXSpeed, _FogYSpeed);
-			float noise = (tex2D(_NoiseTex, i.uv + speed).r - 0.5) * _NoiseAmount;
+			float noise = (SAMPLE_TEXTURE2D(_NoiseTex, sampler_NoiseTex, i.uv + speed).r - 0.5) * _NoiseAmount;
 
 			float fogHeightDensity = saturate((_FogHeightEnd - worldPos.y) / (_FogHeightEnd - _FogHeightStart));
 			float fogDepthDensity = saturate((linearDepth - _FogDepthNear) / (_FogDepthFar - _FogDepthNear));
@@ -123,21 +135,21 @@ Shader "Custom/PostFog"
 			float fogDensity = fogHeightDensity * fogDepthDensity;
 			fogDensity = saturate(fogDensity * _FogDensity * (1 + noise));
 
-			fixed4 finalColor = tex2D(_MainTex, i.uv);
+			half4 finalColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
 			finalColor.rgb = lerp(finalColor.rgb, _FogColor.rgb, fogDensity);
 
 			return finalColor;
 		}
 
-		ENDCG
+		ENDHLSL
 
 		Pass {
-			CGPROGRAM
+			HLSLPROGRAM
 
 			#pragma vertex vert  
 			#pragma fragment frag  
 
-			ENDCG
+			ENDHLSL
 		}
 	}
 	FallBack Off
