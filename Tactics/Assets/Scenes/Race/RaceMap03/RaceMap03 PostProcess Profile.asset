@@ -88,7 +88,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 376f7ecdd18531b4d81bd08c9c75f809, type: 3}
   m_Name: PostFog
   m_EditorClassIdentifier: 
-  active: 1
+  active: 0
   fogDensity:
     m_OverrideState: 1
     m_Value: 1
@@ -120,12 +120,6 @@ MonoBehaviour:
   noiseAmount:
     m_OverrideState: 1
     m_Value: 1
-  minCorner:
-    m_OverrideState: 1
-    m_Value: {x: -100, y: -50, z: -100}
-  maxCorner:
-    m_OverrideState: 1
-    m_Value: {x: 100, y: 50, z: 100}
   expFog:
     m_OverrideState: 1
     m_Value: 1
