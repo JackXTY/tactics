@@ -110,23 +110,33 @@ public class WeatherManager : MonoBehaviour
     public void Rain()
     {
         bool raining = (weather == Weather.Rain);
-        if (raining)
+        if (terrainMat)
         {
-            terrainMat.EnableKeyword("_USE_RAIN_NORMAL_MAP");
+            if (raining)
+            {
+                terrainMat.EnableKeyword("_USE_RAIN_NORMAL_MAP");
+            }
+            else
+            {
+                terrainMat.DisableKeyword("_USE_RAIN_NORMAL_MAP");
+            }
         }
-        else
+
+        if (GetComponent<GroundRain>())
         {
-            terrainMat.DisableKeyword("_USE_RAIN_NORMAL_MAP");
+            GetComponent<GroundRain>().enabled = raining;
         }
-        // terrainMat.SetFloat("_UseRainNormalMap", rain ? 1 : 0);
-        GetComponent<GroundRain>().enabled = raining;
-        
-        rainParticleObj.SetActive(raining);
+        if (rainParticleObj)
+        {
+            rainParticleObj.SetActive(raining);
+        }
+            
     }
 
     void Start()
     {
         hasCloud = (weather == Weather.Rain || weather == Weather.Cloudy);
+
         Rain();
         InitMat();
         // skyboxMat.SetFloat("_kMoonBrightness", MoonBrightness);

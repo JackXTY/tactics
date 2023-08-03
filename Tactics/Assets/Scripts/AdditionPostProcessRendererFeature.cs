@@ -14,7 +14,6 @@ namespace UnityEngine.Experiemntal.Rendering.Universal
 
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
-            
             if (postData == null)
                 return;
             postPass.Setup(evt, postData);

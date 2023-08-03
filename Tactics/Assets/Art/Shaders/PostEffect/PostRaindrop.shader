@@ -111,9 +111,16 @@ Shader "Custom/PostRaindrop"
                     fogTrailTotal += fogTrail;
                 }
                 
-                half blur = _Blur * 7 * fogTrailTotal;
-                // fixed4 col = tex2D(_MainTex, i.uv + offset * _Distortion);
-                fixed4 col = tex2Dlod(_MainTex, half4(uv + offset * _Distortion, 0, blur));
+                half blur = _Blur * fogTrailTotal;
+                uv += offset * _Distortion;
+                fixed4 col = tex2D(_MainTex, uv);
+                if (blur > 0.5) {
+                    half del = 0.002;
+                    col += 0.5f * (tex2D(_MainTex, uv + blur * half2(del, 0)) + tex2D(_MainTex, uv + blur * half2(0, del)) + tex2D(_MainTex, uv + blur * half2(-del, 0)) + tex2D(_MainTex, uv + blur * half2(0, -del)));
+                    col += 0.25f * (tex2D(_MainTex, uv + blur * half2(del, del)) + tex2D(_MainTex, uv + blur * half2(del, -del)) + tex2D(_MainTex, uv + blur * half2(-del, del)) + tex2D(_MainTex, uv + blur * half2(-del, -del)));
+                    col /= 4;
+                }
+                // fixed4 col = tex2Dlod(_MainTex, half4(uv + offset * _Distortion, 0, blur));
                 
                 return col;
             }

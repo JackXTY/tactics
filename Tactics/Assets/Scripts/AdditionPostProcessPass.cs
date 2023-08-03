@@ -88,32 +88,32 @@ namespace UnityEngine.Experiemntal.Rendering.Universal
 
         public void RenderPostFog(CommandBuffer cmd, ref RenderingData renderingData, Material mat)
         {
-            /*
+            
             Matrix4x4 frustumCorners = Matrix4x4.identity;
 
-			float fov = cam.fieldOfView;
-			float near = cam.nearClipPlane;
-			float aspect = cam.aspect;
+			float fov = Camera.main.fieldOfView;
+			float near = Camera.main.nearClipPlane;
+			float aspect = Camera.main.aspect;
 
 			float halfHeight = near * Mathf.Tan(fov * 0.5f * Mathf.Deg2Rad);
-			Vector3 toRight = transform.right * halfHeight * aspect;
-			Vector3 toTop = transform.up * halfHeight;
+			Vector3 toRight = Camera.main.transform.right * halfHeight * aspect;
+			Vector3 toTop = Camera.main.transform.up * halfHeight;
 
-			Vector3 topLeft = transform.forward * near + toTop - toRight;
+			Vector3 topLeft = Camera.main.transform.forward * near + toTop - toRight;
 			float scale = topLeft.magnitude / near;
 
 			topLeft.Normalize();
 			topLeft *= scale;
 
-			Vector3 topRight = transform.forward * near + toRight + toTop;
+			Vector3 topRight = Camera.main.transform.forward * near + toRight + toTop;
 			topRight.Normalize();
 			topRight *= scale;
 
-			Vector3 bottomLeft = transform.forward * near - toTop - toRight;
+			Vector3 bottomLeft = Camera.main.transform.forward * near - toTop - toRight;
 			bottomLeft.Normalize();
 			bottomLeft *= scale;
 
-			Vector3 bottomRight = transform.forward * near + toRight - toTop;
+			Vector3 bottomRight = Camera.main.transform.forward * near + toRight - toTop;
 			bottomRight.Normalize();
 			bottomRight *= scale;
 
@@ -122,33 +122,31 @@ namespace UnityEngine.Experiemntal.Rendering.Universal
 			frustumCorners.SetRow(2, topRight);
 			frustumCorners.SetRow(3, topLeft);
 
-			material.SetMatrix("_FrustumCornersRay", frustumCorners);
+            mat.SetMatrix("_FrustumCornersRay", frustumCorners);
 
-			material.SetFloat("_FogDensity", fogDensity);
-			material.SetColor("_FogColor", fogColor);
-			material.SetFloat("_FogHeightStart", fogHeightStart);
-			material.SetFloat("_FogHeightEnd", fogHeightEnd);
-			material.SetFloat("_FogDepthNear", fogDepthNear);
-			material.SetFloat("_FogDepthFar", fogDepthFar);
+            mat.SetFloat("_FogDensity", m_PostFog.fogDensity.value);
+            mat.SetColor("_FogColor", m_PostFog.fogColor.value);
+            mat.SetFloat("_FogHeightStart", m_PostFog.fogHeightStart.value);
+            mat.SetFloat("_FogHeightEnd", m_PostFog.fogHeightEnd.value);
+            mat.SetFloat("_FogDepthNear", m_PostFog.fogDepthNear.value);
+            mat.SetFloat("_FogDepthFar", m_PostFog.fogDepthFar.value);
 
-			material.SetTexture("_NoiseTex", noiseTexture);
-			material.SetFloat("_FogXSpeed", fogXSpeed);
-			material.SetFloat("_FogYSpeed", fogYSpeed);
-			material.SetFloat("_NoiseAmount", noiseAmount);
+            mat.SetTexture("_NoiseTex", m_PostFog.noiseTexture.value);
+            mat.SetFloat("_FogXSpeed", m_PostFog.fogXSpeed.value);
+            mat.SetFloat("_FogYSpeed", m_PostFog.fogYSpeed.value);
+            mat.SetFloat("_NoiseAmount", m_PostFog.noiseAmount.value);
 
-			Vector3 cloudBoxMin = fogBoxTrans.position - fogBoxTrans.localScale / 2;
-			Vector3 cloudBoxMax = fogBoxTrans.position + fogBoxTrans.localScale / 2;
-			material.SetVector("_CloudBoxMin", cloudBoxMin);
-			material.SetVector("_CloudBoxMax", cloudBoxMax);
+			// Vector3 cloudBoxMin = fogBoxTrans.position - fogBoxTrans.localScale / 2;
+			// Vector3 cloudBoxMax = fogBoxTrans.position + fogBoxTrans.localScale / 2;
+            mat.SetVector("_CloudBoxMin", m_PostFog.minCorner.value);
+            mat.SetVector("_CloudBoxMax", m_PostFog.maxCorner.value);
 
-			if(expFog)
+			if(m_PostFog.expFog.value)
             {
-				material.EnableKeyword("_EXP_FOG_ON");
+                mat.EnableKeyword("_EXP_FOG_ON");
 			}
-			
 
-			Graphics.Blit(src, dest, material);
-             */
+            cmd.Blit(src, dest, mat);
         }
 
         public void RenderDepthBlur(CommandBuffer cmd, ref RenderingData renderingData, Material mat)
@@ -195,23 +193,7 @@ namespace UnityEngine.Experiemntal.Rendering.Universal
             mat.SetInteger("_RainAmount", m_PostRainDrop.rainAmount.value);
             mat.SetFloat("_RainSpeed", m_PostRainDrop.rainSpeed.value);
 
-            // RenderTexture temp = RenderTexture.GetTemporary(src.width, src.height);
-            //temp.filterMode = FilterMode.Bilinear;
-            // temp.useMipMap = true;
-            // temp.autoGenerateMips = true;
-            // Graphics.Blit(src, temp);
-            // Graphics.Blit(temp, dest);
-            // Graphics.Blit(temp, dest, material);
-
-            RenderTextureDescriptor opaqueDesc = renderingData.cameraData.cameraTargetDescriptor;
-            RenderTexture temp = RenderTexture.GetTemporary(opaqueDesc.width, opaqueDesc.height);
-            // cmd.ReleaseTemporaryRT(tempBuffer.id);
-            // cmd.GetTemporaryRT(tempBuffer.id, opaqueDesc, m_GaussianBlur.filterMode.value);
-            cmd.Blit(src, temp);
-            temp.useMipMap = true;
-            // cmd.GenerateMips(temp);
-            cmd.Blit(temp, dest, mat);
-            cmd.ReleaseTemporaryRT(tempBuffer0.id);
+            cmd.Blit(src, dest, mat);
         }
 
         public void RenderGaussianBlur(CommandBuffer cmd, ref RenderingData renderingData, Material mat)

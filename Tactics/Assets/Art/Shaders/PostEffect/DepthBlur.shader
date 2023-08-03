@@ -1,4 +1,4 @@
-Shader "Learn/DepthBlur"
+Shader "Custom/DepthBlur"
 {
     Properties
     {
