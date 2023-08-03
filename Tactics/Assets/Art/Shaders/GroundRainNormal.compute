@@ -1,0 +1,80 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSHigh
+#pragma kernel CSMiddle
+#pragma kernel CSLow
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWStructuredBuffer<float4x4> matrixBuffer;
+RWStructuredBuffer<float2> timeSliceBuffer; // x -> time, y -> speed
+float _DeltaFlashSpeed;
+int _Count;
+
+inline float2 LocalRand(float2 seed)
+{
+    return frac(cos(sin(seed) * 825.2458f) * 562.3673f);
+}
+
+inline float LocalRand(float seed) {
+    return frac(cos(sin(seed * 197.625f) * 754.2418f) * 274.1274f);
+}
+
+[numthreads(1023,1,1)]
+void CSHigh (uint3 id : SV_DispatchThreadID)
+{
+    if (_Count > id.x) {
+        if (timeSliceBuffer[id.x].x > 1) {
+            timeSliceBuffer[id.x].x = 0;
+            // random speed for new rain drop point
+            timeSliceBuffer[id.x].y = 0.8 + LocalRand(timeSliceBuffer[id.x].y) * 0.4f;
+            // random position for new rain drop point
+            float4x4 mtx = matrixBuffer[id.x];
+            float2 seed = float2(mtx._m03, mtx._m13);
+            seed = (LocalRand(seed) - float2(0.5f, 0.5f)) * 2.0f;
+            mtx._m03 = seed.x;
+            mtx._m13 = seed.y;
+            matrixBuffer[id.x] = mtx;
+        }
+        timeSliceBuffer[id.x].x += _DeltaFlashSpeed * timeSliceBuffer[id.x].y;
+    }
+}
+
+[numthreads(512, 1, 1)]
+void CSMiddle(uint3 id : SV_DispatchThreadID)
+{
+    if (_Count > id.x) {
+        if (timeSliceBuffer[id.x].x > 1) {
+            timeSliceBuffer[id.x].x = 0;
+            // random speed for new rain drop point
+            timeSliceBuffer[id.x].y = 0.8 + LocalRand(timeSliceBuffer[id.x].y) * 0.4f;
+            // random position for new rain drop point
+            float4x4 mtx = matrixBuffer[id.x];
+            float2 seed = float2(mtx._m03, mtx._m13);
+            seed = (LocalRand(seed) - float2(0.5f, 0.5f)) * 2.0f;
+            mtx._m03 = seed.x;
+            mtx._m13 = seed.y;
+            matrixBuffer[id.x] = mtx;
+        }
+        timeSliceBuffer[id.x].x += _DeltaFlashSpeed * timeSliceBuffer[id.x].y;
+    }
+}
+
+[numthreads(128, 1, 1)]
+void CSLow(uint3 id : SV_DispatchThreadID)
+{
+    if (_Count > id.x) {
+        if (timeSliceBuffer[id.x].x > 1) {
+            timeSliceBuffer[id.x].x = 0;
+            // random speed for new rain drop point
+            timeSliceBuffer[id.x].y = 0.8 + LocalRand(timeSliceBuffer[id.x].y) * 0.4f;
+            // random position for new rain drop point
+            float4x4 mtx = matrixBuffer[id.x];
+            float2 seed = float2(mtx._m03, mtx._m13);
+            seed = (LocalRand(seed) - float2(0.5f, 0.5f)) * 2.0f;
+            mtx._m03 = seed.x;
+            mtx._m13 = seed.y;
+            matrixBuffer[id.x] = mtx;
+        }
+        timeSliceBuffer[id.x].x += _DeltaFlashSpeed * timeSliceBuffer[id.x].y;
+    }
+}

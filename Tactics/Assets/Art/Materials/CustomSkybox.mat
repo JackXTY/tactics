@@ -30,8 +30,8 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _CloudTexture:
-        m_Texture: {fileID: 2800000, guid: 3eb2060df76f1e44e961899fe67e9b1b, type: 3}
-        m_Scale: {x: 2, y: 2}
+        m_Texture: {fileID: 2800000, guid: 892be0a3f332b7d40b7f5a86b0074e14, type: 3}
+        m_Scale: {x: 3, y: 3}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
         m_Texture: {fileID: 0}
@@ -93,7 +93,10 @@ Material:
     m_Floats:
     - _AtmosphereThickness: 1
     - _BumpScale: 1
-    - _CloudSpeed: 1
+    - _CloudAlpha: 0.04
+    - _CloudSpeed: 0.3
+    - _Cloudy: 0
+    - _CloudySunFactor: 0.7
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
@@ -104,6 +107,7 @@ Material:
     - _HorizonIntensity: 1
     - _HorizonThreshold: 0.02
     - _Metallic: 0
+    - _MinCloudyRatio: 0.2
     - _Mode: 0
     - _MoonRatio: -1.42
     - _MoonSize: 0.242
@@ -116,17 +120,21 @@ Material:
     - _SrcBlend: 1
     - _StarIntensity: 0.4
     - _SunDisk: 2
-    - _SunSize: 0.06
-    - _SunSizeConvergence: 3.31
+    - _SunSize: 0.05
+    - _SunSizeConvergence: 1.8
+    - _TimeRatio: 0.375
     - _UVSec: 0
     - _ZWrite: 1
     - _kMoonBrightness: 0.548
     - _kSunBrightness: 20
     m_Colors:
     - _BaseScale: {r: 1, g: 1, b: 1, a: 0}
+    - _CloudyBottomColor: {r: 0.3254902, g: 0.34509805, b: 0.35686275, a: 128}
+    - _CloudyTopColor: {r: 0.44313726, g: 0.47058824, b: 0.48235294, a: 128}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _GroundColor: {r: 0.5566038, g: 0.5513528, b: 0.54960245, a: 1}
     - _MoonColor: {r: 1, g: 0.98337823, b: 0.8836478, a: 128}
-    - _SkyTint: {r: 0.828125, g: 0.828125, b: 0.8515625, a: 1}
+    - _SkyTint: {r: 0.01953125, g: 0.0234375, b: 0.02734375, a: 1}
+    - _SunDirection: {r: -0, g: 0.7071068, b: -0.7071067, a: 0}
   m_BuildTextureStacks: []

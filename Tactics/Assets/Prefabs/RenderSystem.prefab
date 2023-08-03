@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8461807042134185897}
   - component: {fileID: 4451626255430792753}
   - component: {fileID: 8461807042134185896}
+  - component: {fileID: 1801626567}
   m_Layer: 0
   m_Name: RenderSystem
   m_TagString: Untagged
@@ -61,7 +62,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   skyboxMat: {fileID: 2100000, guid: fe6b6cf36ab54ed4e9084f37de03fde0, type: 2}
   directionalLight: {fileID: 0}
+  sun: {fileID: 0}
   autoTime: 0
   worldSpeed: 30
   worldBeginTime: 12
-  cloudyDay: 0
+  sunTintColor: {r: 0.234959, g: 0.4818773, b: 0.6792453, a: 0}
+  cloudyDay: 1
+  rain: 1
+  terrainMat: {fileID: 2100000, guid: 6b9027d88811f0f439c447d97564d027, type: 2}
+  rainParticleObj: {fileID: 0}
+  sunShadow: 1
+--- !u!114 &1801626567
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8461807042134185898}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66b5e6d1f52530444a89ad44c200a924, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  groundRainCS: {fileID: 7200000, guid: 67bd99b27b0974a4c960a326ed3fd7d9, type: 3}
+  targetTexture: {fileID: 8400000, guid: 6aa3b452cee55a14daec1b362f1c7cb4, type: 2}
+  groundNormalMat: {fileID: 2100000, guid: 5c84e4004f45e174da06b782ffc0fe4b, type: 2}
+  gausBlurMat: {fileID: 2100000, guid: ce12b6e4ca8d75746992cdd1453e98ee, type: 2}
+  timeSpeed: 1.25
+  blurSize: 1
+  raindropCount: 512
+  raindropScale: 0.02
