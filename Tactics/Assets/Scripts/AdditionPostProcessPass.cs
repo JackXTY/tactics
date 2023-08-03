@@ -5,6 +5,16 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
+/*
+ * If you know nothing about URP, please check:
+ * https://zhuanlan.zhihu.com/p/360566324
+ * https://zhuanlan.zhihu.com/p/604880712
+ * 
+ * If you are confused with how URP interact with post-effect, please take a look at:
+ * https://www.zhihu.com/tardis/zm/art/161658349?source_id=1005
+ * https://www.jianshu.com/p/b9cd6bb4c4aa
+ */
+
 namespace UnityEngine.Experiemntal.Rendering.Universal
 {
     public class AdditionPostProcessPass : ScriptableRenderPass
