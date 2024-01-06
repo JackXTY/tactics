@@ -1,14 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
-public enum Weather
-{
-    Sun, Cloudy, Rain, Snow, ThunderRain
-}
-
+/*
+ * WeatherManager:
+ *     - Skybox day Cycle and sun light (directional light, maybe also shadow)
+ *     - Simple cloud based inside skybox
+ */
 public class WeatherManager : MonoBehaviour
 {
+
     public Material skyboxMat;
 
     public Transform directionalLight;
@@ -29,11 +31,6 @@ public class WeatherManager : MonoBehaviour
 
     float worldTime = 0; // when in world now (in mins)
     float timeRatio; // timeRatio in [0, 1]; 0 => night, 1 => noon
-
-    public Weather weather;
-
-    public Material terrainMat;
-    public GameObject rainParticleObj;
 
     public float sunShadow = 1.0f;
 
@@ -107,37 +104,13 @@ public class WeatherManager : MonoBehaviour
         UpdateSky();
     }
 
-    public void Rain()
+    public void SetCloudy(bool cloudy)
     {
-        bool raining = (weather == Weather.Rain);
-        if (terrainMat)
-        {
-            if (raining)
-            {
-                terrainMat.EnableKeyword("_USE_RAIN_NORMAL_MAP");
-            }
-            else
-            {
-                terrainMat.DisableKeyword("_USE_RAIN_NORMAL_MAP");
-            }
-        }
-
-        if (GetComponent<GroundRain>())
-        {
-            GetComponent<GroundRain>().enabled = raining;
-        }
-        if (rainParticleObj)
-        {
-            rainParticleObj.SetActive(raining);
-        }
-            
+        hasCloud = cloudy;
     }
 
     void Start()
     {
-        hasCloud = (weather == Weather.Rain || weather == Weather.Cloudy);
-
-        Rain();
         InitMat();
         // skyboxMat.SetFloat("_kMoonBrightness", MoonBrightness);
     }
