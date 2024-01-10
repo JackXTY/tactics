@@ -43,7 +43,8 @@ public class GroundRain : MonoBehaviour
     public float timeSpeed = 1.25f;
     public float blurSize = 1.0f;
 
-    public int raindropCount = 512;
+    [HideInInspector]
+    public int raindropCount = 512; // Let RenderSystem Control This
     private int _count;
     public int count
     {

@@ -41,11 +41,27 @@ public class RenderSystem : MonoBehaviour
 
     public WeatherManager weatherManager;
 
-    public GameObject rainParticleObj;
-
     public Material terrainMat;
 
     bool hasCloud;
+
+
+    // Rain Properties
+
+    [Header("- Rain")]
+
+    public GameObject rainParticleObj;
+
+    [Range(0.0f, 100.0f)]
+    public float rainAmount = 50.0f;
+
+    ParticleSystem rainParticle;
+
+    GroundRain groundRainComp;
+
+    public bool terrainRainCircles = false;
+
+    public bool rainPostProcess = false;
 
     void Awake()
     {
@@ -70,34 +86,53 @@ public class RenderSystem : MonoBehaviour
     public void Rain()
     {
         bool raining = (weather == Weather.Rain);
+
+        // enable terrain rain effect
         if (terrainMat)
         {
-            if (raining)
+            GroundRain grounRainComp;
+            if (TryGetComponent(out grounRainComp))
             {
-                // terrainMat.EnableKeyword("_RAIN_EFFECT");
-                CoreUtils.SetKeyword(terrainMat, "_RAIN_EFFECT", true);
-            }
-            else
-            {
-                // terrainMat.DisableKeyword("_RAIN_EFFECT");
-                CoreUtils.SetKeyword(terrainMat, "_RAIN_EFFECT", false);
+                grounRainComp.enabled = (raining && terrainRainCircles);
+                CoreUtils.SetKeyword(terrainMat, "_RAIN_EFFECT", (raining && terrainRainCircles));
             }
         }
 
-        if (GetComponent<GroundRain>())
-        {
-            GetComponent<GroundRain>().enabled = raining;
-        }
+        // enable rain particle effect
         if (rainParticleObj)
         {
             rainParticleObj.SetActive(raining);
+            
+            if(rainParticleObj.TryGetComponent(out rainParticle))
+            {
+                if(!TryGetComponent(out groundRainComp))
+                {
+                    Debug.LogWarning("GroundRain Component Not Found!!");
+                }
+                UpdateRainAmount();
+            }
+            else
+            {
+                Debug.LogWarning("Rain Particle System Not Found!!");
+            }
         }
 
+        SetStatusComp(raining && rainPostProcess, rainDropComp);
     }
-   
+
+    public void UpdateRainAmount()
+    {
+        ParticleSystem.EmissionModule em = rainParticle.emission;
+        em.rateOverTime = rainAmount * 8.0f;
+        if (groundRainComp)
+        {
+            groundRainComp.raindropCount = (int)(rainAmount * 10.0f);
+        }
+        rainDropComp.rainAmount.Override(1 + Mathf.RoundToInt(rainAmount / 100.0f * 6.0f));
+    }
+
     public void SetStatusComp(bool status, UnityEngine.Rendering.VolumeComponent Comp)
     {
         Comp.active = status;
     }
-
 }

@@ -8,7 +8,7 @@
 RWStructuredBuffer<float4x4> matrixBuffer;
 RWStructuredBuffer<float2> timeSliceBuffer; // x -> time, y -> speed
 float _DeltaFlashSpeed;
-int _Count;
+uint _Count;
 
 inline float2 LocalRand(float2 seed)
 {

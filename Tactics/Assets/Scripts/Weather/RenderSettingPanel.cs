@@ -16,6 +16,10 @@ public struct ToggleInfo
     public ToggleTag tag;
 }
 
+/*
+ * RenderSettingPanel:
+ *      - Transfer data between UI & RenderSystem, Seperate ui logic from RenderSystem
+ */
 
 public class RenderSettingPanel : MonoBehaviour
 {
@@ -30,6 +34,18 @@ public class RenderSettingPanel : MonoBehaviour
             info.ui.onValueChanged.AddListener(delegate {
                 ToggleValueChanged(info);
             });
+        }
+
+        if(RenderSystem.instance.weather == Weather.Rain && RenderSystem.instance.rainPostProcess)
+        {
+            foreach (ToggleInfo info in toggleList)
+            {
+                if(info.tag == ToggleTag.RainDropToggle)
+                {
+                    info.ui.isOn = true;
+                    break;
+                }
+            }
         }
     }
 
@@ -86,7 +102,8 @@ public class RenderSettingPanel : MonoBehaviour
     }
     public void RainChangeAmount(Slider slider)
     {
-        RenderSystem.instance.rainDropComp.rainAmount.Override(1 + Mathf.RoundToInt(slider.value * 6.0f));
+        RenderSystem.instance.rainAmount = slider.value * 100.0f;
+        RenderSystem.instance.UpdateRainAmount();
     }
     public void RainChangeSpeed(Slider slider)
     {
