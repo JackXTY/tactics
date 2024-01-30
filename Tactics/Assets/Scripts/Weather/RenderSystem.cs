@@ -37,7 +37,7 @@ public class RenderSystem : MonoBehaviour
     [HideInInspector]
     public UnityEngine.Experiemntal.Rendering.Universal.DepthBlur depthBlurComp;
 
-    private Camera mainCam = null;
+    // private Camera mainCam = null;
 
     public WeatherManager weatherManager;
 
@@ -59,10 +59,13 @@ public class RenderSystem : MonoBehaviour
 
     GroundRain groundRainComp;
 
-    public bool terrainRainCircles = false;
+    public bool terrainRainEffect = false;
 
     public bool rainPostProcess = false;
 
+    public Vector3 windForce = new Vector3(0, 0, 15);
+
+    public ParticleSystemForceField windField;
     void Awake()
     {
         instance = this;
@@ -93,8 +96,8 @@ public class RenderSystem : MonoBehaviour
             GroundRain grounRainComp;
             if (TryGetComponent(out grounRainComp))
             {
-                grounRainComp.enabled = (raining && terrainRainCircles);
-                CoreUtils.SetKeyword(terrainMat, "_RAIN_EFFECT", (raining && terrainRainCircles));
+                grounRainComp.enabled = (raining && terrainRainEffect);
+                CoreUtils.SetKeyword(terrainMat, "_RAIN_EFFECT", (raining && terrainRainEffect));
             }
         }
 
@@ -116,6 +119,19 @@ public class RenderSystem : MonoBehaviour
                 Debug.LogWarning("Rain Particle System Not Found!!");
             }
         }
+
+        // Set Force Field For Rain Particle
+        if (windField)
+        {
+            windField.directionX = windForce.x;
+            windField.directionY = windForce.y;
+            windField.directionZ = windForce.z;
+        }
+        else
+        {
+            Debug.LogWarning("Particle System Force Field For Rain Not Found!!");
+        }
+        rainDropComp.windForce.Override(windForce);
 
         SetStatusComp(raining && rainPostProcess, rainDropComp);
     }

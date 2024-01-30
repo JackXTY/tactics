@@ -13,6 +13,14 @@ using UnityEngine.Rendering.Universal;
  * If you are confused with how URP interact with post-effect, please take a look at:
  * https://www.zhihu.com/tardis/zm/art/161658349?source_id=1005
  * https://www.jianshu.com/p/b9cd6bb4c4aa
+ * 
+ */
+
+/*
+ * AdditionPostProcessPass is a render pass specifically for rendering post effect
+ * needed for various weather effect, like fog, raindrop etc.
+ * Original post effect is URP is still supported, but for quality reason,
+ * implement our own version here may be better.
  */
 
 namespace UnityEngine.Experiemntal.Rendering.Universal
@@ -108,7 +116,7 @@ namespace UnityEngine.Experiemntal.Rendering.Universal
             if (m_PostRainDrop.IsActive())
             {
                 SwitchForSinglePassPostEffect();
-                RenderPostRainDrop(cmd, ref renderingData, m_Materials.postRainDrop);
+                RenderPostRainDrop(cmd, ref renderingData, m_Materials.postRainDrop, m_Materials.gaussianBlur);
                 src = dest;
                 dest = colorTarget;
             }
@@ -227,20 +235,47 @@ namespace UnityEngine.Experiemntal.Rendering.Universal
             cmd.ReleaseTemporaryRT(tempBuffer1.id);
         }
         
-        public void RenderPostRainDrop(CommandBuffer cmd, ref RenderingData renderingData, Material mat)
+        public void RenderPostRainDrop(CommandBuffer cmd, ref RenderingData renderingData, Material rainDropMat, Material blurMat)
         {
-            mat.SetFloat("_GridNum", m_PostRainDrop.gridNum.value);
-            mat.SetFloat("_Distortion", m_PostRainDrop.distortion.value);
-            mat.SetFloat("_Blur", m_PostRainDrop.blur.value);
-            mat.SetInteger("_RainAmount", m_PostRainDrop.rainAmount.value);
-            mat.SetFloat("_RainSpeed", m_PostRainDrop.rainSpeed.value);
+            RenderTextureDescriptor opaqueDesc = renderingData.cameraData.cameraTargetDescriptor;
 
-            // RenderTextureDescriptor desc = renderingData.cameraData.cameraTargetDescriptor;
-            cmd.Blit(src, dest, mat);
-            // cmd.GetTemporaryRT(tempBuffer0.id, desc);
-            // cmd.Blit(src, tempBuffer0.id, mat);
-            // cmd.Blit(tempBuffer0.id, dest);
-            // cmd.ReleaseTemporaryRT(tempBuffer0.id);
+            opaqueDesc.width = opaqueDesc.width / m_PostRainDrop.downSample.value;
+            opaqueDesc.height = opaqueDesc.height / m_PostRainDrop.downSample.value;
+            opaqueDesc.depthBufferBits = 0;
+
+            cmd.GetTemporaryRT(gaussianBlurBuffer0.id, opaqueDesc, m_GaussianBlur.filterMode.value);
+            RenderTexture tmpBlurTex = RenderTexture.GetTemporary(opaqueDesc.width, opaqueDesc.height, 0);
+            tmpBlurTex.filterMode = m_GaussianBlur.filterMode.value;
+
+            blurMat.SetFloat("_BlurSize", m_PostRainDrop.blur.value);
+
+            // Render blur pass
+            cmd.Blit(src, gaussianBlurBuffer0.id, blurMat, 0);
+            cmd.Blit(gaussianBlurBuffer0.id, tmpBlurTex, blurMat, 1);
+
+            // TODO: (maybe)
+            // Combine blur pass in depth of field and this to the same one
+                
+            rainDropMat.SetTexture("_BlurTex", tmpBlurTex);
+            rainDropMat.SetFloat("_GridNum", m_PostRainDrop.gridNum.value);
+            rainDropMat.SetFloat("_Distortion", m_PostRainDrop.distortion.value);
+            // rainDropMat.SetFloat("_Blur", m_PostRainDrop.blur.value);
+            rainDropMat.SetInteger("_RainAmount", m_PostRainDrop.rainAmount.value);
+            rainDropMat.SetFloat("_RainSpeed", m_PostRainDrop.rainSpeed.value);
+
+            if (m_PostRainDrop.fogScreen.value)
+            {
+                rainDropMat.EnableKeyword("_FOG_SCREEN");
+            }
+            else
+            {
+                rainDropMat.DisableKeyword("_FOG_SCREEN");
+            }
+
+            cmd.Blit(src, dest, rainDropMat);
+
+            RenderTexture.ReleaseTemporary(tmpBlurTex);
+            cmd.ReleaseTemporaryRT(gaussianBlurBuffer0.id);
         }
 
         public void RenderGaussianBlur(CommandBuffer cmd, ref RenderingData renderingData, Material mat)

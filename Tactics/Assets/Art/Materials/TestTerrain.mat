@@ -114,6 +114,10 @@ Material:
         m_Texture: {fileID: 8400000, guid: 6aa3b452cee55a14daec1b362f1c7cb4, type: 2}
         m_Scale: {x: 90, y: 60}
         m_Offset: {x: 0, y: 0}
+    - _ReflectionTex:
+        m_Texture: {fileID: 8400000, guid: 1791441d1ebc66e4885e2e75521d8bd9, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _Splat0:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -145,6 +149,7 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
+    - _GroundHeight: 0
     - _HeightTransition: 0
     - _Metallic: 0
     - _Metallic0: 0
@@ -172,4 +177,8 @@ Material:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _GroundNormal: {r: 0, g: 0, b: 0, a: 0}
+    - _GroundRef: {r: 857.1332, g: 0.055845387, b: 228.87793, a: 0}
+    - _PlaneForward: {r: -0.1575797, g: 0.07105035, b: 0.98494697, a: 0}
+    - _PlaneNormal: {r: 0.0048651546, g: 0.99998736, b: 0.0012826052, a: 0}
   m_BuildTextureStacks: []

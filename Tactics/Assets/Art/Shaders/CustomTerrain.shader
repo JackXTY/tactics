@@ -41,6 +41,10 @@ Shader "Universal Render Pipeline/Terrain/CustomRainLitTerrain"
 
         [Toggle(_RAIN_EFFECT)]_RainEffect("Rain Effect", Float) = 0
         _GroundRainNormalTex("NormalMap", 2D) = "white" {}
+        // _ReflectionTex("ReflectionMap", 2D) = "white" {}
+        [HideInInspector] _GroundRef("GroundReferencePoint", Vector) = (0.0, 0.0, 0.0, 0.0)
+        [HideInInspector] _PlaneNormal("PlaneNormal", Vector) = (0.0, 0.0, 0.0, 0.0)
+        // [HideInInspector] _PlaneForward("PlaneNormal", Vector) = (0.0, 0.0, 0.0, 0.0)
     }
 
     HLSLINCLUDE
@@ -48,12 +52,22 @@ Shader "Universal Render Pipeline/Terrain/CustomRainLitTerrain"
     #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
     // #include "Packages/com.unity.render-pipelines.universal/Shaders/Terrain/TerrainLitInput.hlsl"
     // #include "Packages/com.unity.render-pipelines.universal/Shaders/Terrain/TerrainLitPasses.hlsl"
+    
 
     #pragma multi_compile_fragment __ _ALPHATEST_ON
     #pragma multi_compile_local __ _RAIN_EFFECT
 
     TEXTURE2D(_GroundRainNormalTex); SAMPLER(sampler_GroundRainNormalTex);
     float4 _GroundRainNormalTex_ST;
+
+    // TEXTURE2D(_ReflectionTex); SAMPLER(sampler_ReflectionTex);
+    // float4 _ReflectionTex_ST;
+
+    float3 _GroundRef;
+    float3 _PlaneNormal;
+    // float3 _PlaneForward;
+
+    TEXTURE2D(_CameraOpaqueTexture); SAMPLER(sampler_CameraOpaqueTexture);
 
     ENDHLSL
 

@@ -96,6 +96,7 @@ Shader "Universal Render Pipeline/Post Effect/GaussianBlur"
 
 			ENDHLSL
 		}
+
 	}
 	FallBack "Diffuse"
 }

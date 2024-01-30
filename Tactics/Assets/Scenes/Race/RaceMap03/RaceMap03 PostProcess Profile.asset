@@ -15,7 +15,7 @@ MonoBehaviour:
   active: 0
   gridNum:
     m_OverrideState: 1
-    m_Value: 16
+    m_Value: 10
   distortion:
     m_OverrideState: 1
     m_Value: 1
@@ -28,6 +28,15 @@ MonoBehaviour:
   rainSpeed:
     m_OverrideState: 1
     m_Value: 0.25
+  downSample:
+    m_OverrideState: 1
+    m_Value: 2
+  windForce:
+    m_OverrideState: 1
+    m_Value: {x: 0, y: 0, z: 0}
+  fogScreen:
+    m_OverrideState: 1
+    m_Value: 0
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -60,13 +69,13 @@ MonoBehaviour:
   active: 0
   focusDistance:
     m_OverrideState: 1
-    m_Value: 10
+    m_Value: 5
   focusRange:
     m_OverrideState: 1
-    m_Value: 5
+    m_Value: 30
   radiusSparse:
     m_OverrideState: 1
-    m_Value: 3
+    m_Value: 2
   simpleBlurRange:
     m_OverrideState: 1
     m_Value: 1

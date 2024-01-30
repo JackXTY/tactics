@@ -17,6 +17,10 @@ namespace UnityEngine.Experiemntal.Rendering.Universal
         public IntParameter rainAmount = new IntParameter(0);
         [Range(0, 3)]
         public FloatParameter rainSpeed = new FloatParameter(0.25f);
+        [Range(1, 8)]
+        public IntParameter downSample = new IntParameter(2);
+        public Vector3Parameter windForce = new Vector3Parameter(Vector3.zero);
+        public BoolParameter fogScreen = new BoolParameter(true);
         public bool IsActive()
         {
             return active && rainAmount.value > 0;
