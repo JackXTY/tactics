@@ -18,7 +18,7 @@ namespace UnityEditor.Rendering.Universal
 
             public readonly GUIContent rainEffect = new GUIContent("Enable Rain Effect", "Terrain will have rain effect.");
             public readonly GUIContent groundRainNormalTexture = new GUIContent("Ground Rain NormalMap", "The normal texture for terrain to show rain drop effect.");
-            public readonly GUIContent groundReflectionTexture = new GUIContent("Ground Reflection Map", "The reflection texture for terrain.");
+            public readonly GUIContent waterPoolTexture = new GUIContent("Water Pool Map", "The texture show where water pools are.");
 
             public readonly GUIContent diffuseTexture = new GUIContent("Diffuse");
             public readonly GUIContent colorTint = new GUIContent("Color Tint");
@@ -66,8 +66,8 @@ namespace UnityEditor.Rendering.Universal
         MaterialProperty groundRainNormalTexture = null;
         const string kGroundRainNormalTexture = "_GroundRainNormalTex";
 
-        MaterialProperty groundReflectionTexture = null;
-        const string kGroundReflectionTexture = "_ReflectionTex";
+        MaterialProperty waterPoolTexture = null;
+        const string kWaterPoolTexture = "_WaterPoolTex";
 
         private bool m_ShowChannelRemapping = false;
         enum HeightParametrization
@@ -94,7 +94,7 @@ namespace UnityEditor.Rendering.Universal
             enableInstancedPerPixelNormal = FindProperty(kEnableInstancedPerPixelNormal, props, false);
             rainEffect = FindProperty(kRainEffect, props, false);
             groundRainNormalTexture = FindProperty(kGroundRainNormalTexture, props, false);
-            groundReflectionTexture = FindProperty(kGroundReflectionTexture, props, false);
+            waterPoolTexture = FindProperty(kWaterPoolTexture, props, false);
         }
 
         static public void SetupMaterialKeywords(Material material)
@@ -162,10 +162,10 @@ namespace UnityEditor.Rendering.Universal
 
                 EditorGUILayout.Space();
 
-                if (groundReflectionTexture != null)
+                if (waterPoolTexture != null)
                 {
                     EditorGUI.indentLevel++;
-                    materialEditorIn.ShaderProperty(groundReflectionTexture, styles.groundReflectionTexture);
+                    materialEditorIn.ShaderProperty(waterPoolTexture, styles.waterPoolTexture);
                     EditorGUI.indentLevel--;
                 }
 

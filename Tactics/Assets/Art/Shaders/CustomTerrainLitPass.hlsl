@@ -7,6 +7,9 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DBuffer.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/Shaders/Terrain/TerrainLitPasses.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl"
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/ImageBasedLighting.hlsl"
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/RealtimeLights.hlsl"
 #include "Assets/Art/Shaders/TerrainHelper.hlsl"
 
 struct CustomVaryings
@@ -263,11 +266,15 @@ half4 CustomSplatmapFragment(CustomVaryings IN) : SV_TARGET
     half occlusion = dot(splatControl, defaultOcclusion);
 #endif
 
-/*
-    With _RAIN_EFFECT defined, the the raindrop effect 
-*/
+    // TODO: 
+    // 1. decide where is water pool (maybe also on slope?, work with perlin noise)
+    // 2. only show reflection in water pool
+    // 3. add some small disturbance for water pool
+    // 4. different raindrop hit effect for ground and water pool
+    // 5. use skybox (or other way) for reflection (try set smoothness to 1) when can't see skybox in screen
+
 #ifdef _RAIN_EFFECT
-    // sample rain ground normal, draw ripple on ground
+    // sample rain ground normal, draw raindrop effect on ground
     half3 rainNormalTS = normalize(UnpackNormal(SAMPLE_TEXTURE2D(_GroundRainNormalTex, sampler_GroundRainNormalTex, IN.uvRainTex)));
     half3 bitangentTS = cross(normalTS, half3(1, 0, 0));
     half3 tangentTS = cross(bitangentTS, normalTS);
@@ -275,56 +282,6 @@ half4 CustomSplatmapFragment(CustomVaryings IN) : SV_TARGET
         dot(half3(tangentTS.x, bitangentTS.x, normalTS.x), rainNormalTS),
         dot(half3(tangentTS.y, bitangentTS.y, normalTS.y), rainNormalTS),
         dot(half3(tangentTS.z, bitangentTS.z, normalTS.z), rainNormalTS)));
-
-
-
-    float3 camToPointDirWS = normalize(IN.positionWS.xyz - _WorldSpaceCameraPos);
-    float3 reflDir = reflect(camToPointDirWS, IN.normal.xyz);
-
-    bool find = false;
-
-    // test for intersection
-    float2 tempUV = float2(-1.0f, -1.0f);
-    float smallStepSize = 1.0f;
-    // float testDepthDiff = CheckDepthDiff(IN.positionWS.xyz, tempUV);
-    // In TerrainHelper.hlsl, return true when (pixel_depth < eyeDistance)
-    float depthDiff = CheckDepthDiff(IN.positionWS.xyz + reflDir * smallStepSize, tempUV);
-    if (depthDiff < 0.0f) {
-        // return float4(abs(depthDiff), 0.0f, 0.0f, 1.0f);
-
-        // search within 1.0f, since objects too close to ground
-        /*
-        UNITY_LOOP
-        for (float step = 1.0f; step < 2.0f; step += small_step_size) {
-            float3 reflPosWS = groundPos + reflDir * step;
-
-            // In TerrainHelper.hlsl, return true when (pixel_depth < eyeDistance)
-            float2 tempUV;
-            if (CheckIntersection(reflPosWS, tempUV) < 0.0f) {
-                albedo = SAMPLE_TEXTURE2D(_CameraOpaqueTexture, sampler_CameraOpaqueTexture, tempUV);
-                find = true;
-                break;
-            }
-        }
-        */
-    }
-    else {
-        UNITY_LOOP
-        for (float step = 1.0f; step < 100.0f; step += 5.0f) {
-            float3 reflPosWS = IN.positionWS.xyz + reflDir * step;
-            
-            if (CheckDepthDiff(reflPosWS, tempUV) < 0.0f) {
-                break;
-            }
-        }
-    }
-    
-    if (tempUV.x >= 0.0f) {
-        albedo = SAMPLE_TEXTURE2D(_CameraOpaqueTexture, sampler_CameraOpaqueTexture, tempUV);
-    }
-    
-    
-    // smoothness = 1.0f;
 #endif
 
     InputData inputData;
@@ -342,7 +299,59 @@ half4 CustomSplatmapFragment(CustomVaryings IN) : SV_TARGET
         smoothness);
 #endif
 
-#ifdef TERRAIN_GBUFFER
+
+#ifdef _RAIN_EFFECT
+    // Decide where has water according to noise
+    float2 poolUV = fmod(IN.uvMainAndLM.xy * 25.0f, 1.0f);
+    float hasPool = SAMPLE_TEXTURE2D(_WaterPoolTex, sampler_WaterPoolTex, poolUV).r;
+    if (hasPool > 0.07f) {
+        // albedo = half4(1.0f, 1.0f, 0.0f, 1.0f);
+        // Screen Space Reflection for accumulated water
+        float3 camToPointDirWS = normalize(IN.positionWS.xyz - _WorldSpaceCameraPos);
+        float3 groundNormal = IN.normal.xyz;  // inputData.normalWS;
+        float3 reflDir = (reflect(camToPointDirWS, groundNormal));
+
+        // test for intersection
+        float2 tempUV;
+        bool findReflection = false;
+        float beginStepSize = 1.0f;
+        float thickness = 1.0f;
+
+        UNITY_LOOP
+        for (float step = beginStepSize; step < 50.0f; step += 1.0f) {
+            float3 reflPosWS = IN.positionWS.xyz + reflDir * step;
+            float depthDiff = CheckDepthDiff(reflPosWS, tempUV); // CheckDepthDiff defined In TerrainHelper.hlsl
+            if (depthDiff < 0.0f && depthDiff > -thickness) {
+                findReflection = true;
+                break;
+            }
+        }
+
+        if (!findReflection) {
+            // get the uv of corresponding skybox
+            tempUV = getWorldPosUV(IN.positionWS.xyz + reflDir * 50.0f);
+        }
+        tempUV.x = tempUV.x < 0 ? -tempUV.x * 0.5f :
+            tempUV.x > 1 ? 1.0f - (tempUV.x - 1.0f) * 0.5f : tempUV.x;
+        tempUV.y = tempUV.y < 0 ? -tempUV.y * 0.5f :
+            tempUV.y > 1 ? 1.0f - (tempUV.y - 1.0f) * 0.5f : tempUV.y;
+        albedo = SAMPLE_TEXTURE2D(_CameraOpaqueTexture, sampler_CameraOpaqueTexture, tempUV);
+                
+    }
+    
+    
+
+    // We suppose the scene is purely outdoor and open, however in some extreme situation,
+    // the corresponding skybox might not be shown in the scene
+
+    // smoothness = 1.0f;
+#endif
+
+/*
+* Suppose we just use Forward Rendering now
+*/
+
+#ifdef TERRAIN_GBUFFER // Used in deferred rendering
 
     BRDFData brdfData;
     InitializeBRDFData(albedo, metallic, /* specular */ half3(0.0h, 0.0h, 0.0h), smoothness, alpha, brdfData);

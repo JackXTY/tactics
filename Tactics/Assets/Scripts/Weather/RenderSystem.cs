@@ -45,6 +45,9 @@ public class RenderSystem : MonoBehaviour
 
     bool hasCloud;
 
+    public Vector3 windForce = new Vector3(0, 0, 15);
+
+    public ParticleSystemForceField windField;
 
     // Rain Properties
 
@@ -63,9 +66,10 @@ public class RenderSystem : MonoBehaviour
 
     public bool rainPostProcess = false;
 
-    public Vector3 windForce = new Vector3(0, 0, 15);
+    [Header("- Snow")]
 
-    public ParticleSystemForceField windField;
+    public GameObject snowParticleObj;
+
     void Awake()
     {
         instance = this;
@@ -83,7 +87,20 @@ public class RenderSystem : MonoBehaviour
 
         hasCloud = (weather == Weather.Rain || weather == Weather.Cloudy);
         weatherManager.SetCloudy(hasCloud);
+        // Set Force Field For Rain Particle
+        windField.enabled = (weather == Weather.Rain) || (weather == Weather.Snow);
+        if (windField)
+        {
+            windField.directionX = windForce.x;
+            windField.directionY = windForce.y;
+            windField.directionZ = windForce.z;
+        }
+        else
+        {
+            Debug.LogWarning("Particle System Force Field For Rain Not Found!!");
+        }
         Rain();
+        Snow();
     }
 
     public void Rain()
@@ -119,18 +136,7 @@ public class RenderSystem : MonoBehaviour
                 Debug.LogWarning("Rain Particle System Not Found!!");
             }
         }
-
-        // Set Force Field For Rain Particle
-        if (windField)
-        {
-            windField.directionX = windForce.x;
-            windField.directionY = windForce.y;
-            windField.directionZ = windForce.z;
-        }
-        else
-        {
-            Debug.LogWarning("Particle System Force Field For Rain Not Found!!");
-        }
+        
         rainDropComp.windForce.Override(windForce);
 
         SetStatusComp(raining && rainPostProcess, rainDropComp);
@@ -145,6 +151,16 @@ public class RenderSystem : MonoBehaviour
             groundRainComp.raindropCount = (int)(rainAmount * 10.0f);
         }
         rainDropComp.rainAmount.Override(1 + Mathf.RoundToInt(rainAmount / 100.0f * 6.0f));
+    }
+
+    public void Snow()
+    {
+        bool snowing = (weather == Weather.Snow);
+
+        if (snowParticleObj)
+        {
+            snowParticleObj.SetActive(snowing);
+        }
     }
 
     public void SetStatusComp(bool status, UnityEngine.Rendering.VolumeComponent Comp)

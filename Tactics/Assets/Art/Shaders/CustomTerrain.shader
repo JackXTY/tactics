@@ -45,6 +45,8 @@ Shader "Universal Render Pipeline/Terrain/CustomRainLitTerrain"
         [HideInInspector] _GroundRef("GroundReferencePoint", Vector) = (0.0, 0.0, 0.0, 0.0)
         [HideInInspector] _PlaneNormal("PlaneNormal", Vector) = (0.0, 0.0, 0.0, 0.0)
         // [HideInInspector] _PlaneForward("PlaneNormal", Vector) = (0.0, 0.0, 0.0, 0.0)
+
+        _WaterPoolTex("WaterPool", 2D) = "white" {}
     }
 
     HLSLINCLUDE
@@ -59,6 +61,9 @@ Shader "Universal Render Pipeline/Terrain/CustomRainLitTerrain"
 
     TEXTURE2D(_GroundRainNormalTex); SAMPLER(sampler_GroundRainNormalTex);
     float4 _GroundRainNormalTex_ST;
+
+    TEXTURE2D(_WaterPoolTex); SAMPLER(sampler_WaterPoolTex);
+    float4 _WaterPoolTex_ST;
 
     // TEXTURE2D(_ReflectionTex); SAMPLER(sampler_ReflectionTex);
     // float4 _ReflectionTex_ST;
@@ -159,6 +164,7 @@ Shader "Universal Render Pipeline/Terrain/CustomRainLitTerrain"
             ENDHLSL
         }
 
+        // Used in deferred rendering
         Pass
         {
             Name "GBuffer"
